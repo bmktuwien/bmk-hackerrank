@@ -86,6 +86,81 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class Tree {
+public:
+    struct Node {
+        int id{-1};
+        Node *parent{nullptr};
+        int cnt{-1};
+        std::vector<Node *> children;
+    };
+
+    explicit Tree(const std::vector<std::pair<int,int>>& edges) {
+        _nodes.resize(edges.size() + 1);
+
+        for (int i = 0; i < _nodes.size(); i++) {
+            _nodes[i].id = i;
+        }
+
+        for (auto &edge : edges) {
+            int xid = edge.first - 1;
+            int yid = edge.second - 1;
+
+            if (_nodes[yid].parent != nullptr) {
+                std::vector<Node *> stack;
+
+                Node *p = &_nodes[yid];
+                while (p != nullptr) {
+                    stack.push_back(p);
+                    p = p->parent;
+                }
+
+                while (stack.size() > 1) {
+                    p = stack.back();
+                    stack.pop_back();
+                    p->parent = stack.back();
+                }
+
+            }
+
+            _nodes[yid].parent = &_nodes[xid];
+        }
+
+        for (auto &node : _nodes) {
+            if (node.parent != nullptr) {
+                node.parent->children.push_back(&_nodes[node.id]);
+            } else {
+                _root = &_nodes[node.id];
+            }
+        }
+    }
+
+    void count_nodes() {
+        _count(_root);
+    }
+
+    Node *getRoot() {
+        return _root;
+    }
+
+private:
+    Node *_root{nullptr};
+    std::vector<Node> _nodes;
+
+    int _count(Node *node) {
+        int c = 1;
+
+        for (auto child : node->children) {
+            c += _count(child);
+        }
+
+        node->cnt = c;
+        return c;
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 // ATTENTION: input array must be sorted!
 long sum_diff_of_pairs(const std::vector<int>& a) {
     long sum = 0;
