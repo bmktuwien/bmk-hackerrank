@@ -52,6 +52,52 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class BITree {
+public:
+    explicit BITree(size_t n) : _n(n) {
+        _a.resize(n+1);
+    }
+
+    void update(int index, long val) {
+        index = index + 1;
+
+        while (index <= _n) {
+            _a[index] += val;
+            index += index & (-index);
+        }
+    }
+
+    long getSum(int index) {
+        long sum = 0;
+        index = index + 1;
+
+        while (index>0) {
+            sum += _a[index];
+            index -= index & (-index);
+        }
+
+        return sum;
+    }
+
+private:
+    size_t _n;
+    std::vector<long> _a;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+// ATTENTION: input array must be sorted!
+long sum_diff_of_pairs(const std::vector<int>& a) {
+    long sum = 0;
+    auto n = a.size();
+
+    for (auto i = n - 1; i >= 0; i--) {
+        sum += i*a[i] - (n-1-i)*a[i];
+    }
+
+    return sum;
+}
+
 long n_choose_k(int n, int k) {
     if (n < k) {
         return 0;
