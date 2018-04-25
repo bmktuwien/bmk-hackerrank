@@ -1,9 +1,9 @@
-#include "hackerrank_util.h"
+#include "hackerrank_lib.h"
 
 #include <vector>
 #include <iostream>
 
-namespace hackerrank_util {
+namespace hackerrank_lib {
 
 class DUS {
 public:
@@ -192,4 +192,4 @@ long n_choose_k(int n, int k) {
     return res;
 }
 
-} // namespace hackerrank_util
+} // namespace hackerrank_lib
