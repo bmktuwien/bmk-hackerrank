@@ -13,7 +13,6 @@ class RootedTree {
     struct Node {
         int id{-1};
         Node *parent{nullptr};
-        std::vector<Node *> children;
     };
 
 public:
@@ -33,23 +32,21 @@ public:
             vector<Node *> tmp;
             vector<Node *> leaves;
             for (auto n1 : nodes) {
-                vector<Node *> children;
 
+                bool has_children = false;
                 for (auto i : adjacency_map[n1->id]) {
                     if (!visited[i]) {
+                        has_children = true;
                         visited[i] = true;
                         auto n2 = new Node();
                         n2->id = i;
                         n2->parent = n1;
-                        children.push_back(n2);
                         tmp.push_back(n2);
                         _cnt++;
                     }
                 }
 
-                n1->children = std::move(children);
-
-                if (n1->children.empty()) {
+                if (!has_children) {
                     _num_leaves++;
                     leaves.push_back(n1);
                 }
@@ -83,8 +80,8 @@ public:
     }
 
     bool isomorph(const RootedTree &t2) {
-        unordered_map<Node *, vector<int>> l1;
-        unordered_map<Node *, vector<int>> l2;
+        map<Node *, vector<int>> l1;
+        map<Node *, vector<int>> l2;
 
         if (getMaxLevel() != t2.getMaxLevel()) {
             return false;
@@ -109,52 +106,20 @@ public:
                 sort(p.second.begin(), p.second.end());
                 labels1.push_back(p.second);
             }
+            for (int i = 0; i < leaves1.size(); i++) {
+                labels1.emplace_back(vector<int>({0}));
+            }
 
             for (auto &p : l2) {
                 sort(p.second.begin(), p.second.end());
                 labels2.push_back(p.second);
             }
+            for (int i = 0; i < leaves2.size(); i++) {
+                labels2.emplace_back(vector<int>({0}));
+            }
 
             sort(labels1.begin(), labels1.end());
             sort(labels2.begin(), labels2.end());
-
-            cout << "level " << l << endl;
-            cout << "nodes1: ";
-            for (auto p : l1) {
-                cout << p.first->id << " ";
-            }
-            for (auto leaf : leaves1) {
-                cout << leaf->id << " ";
-            }
-            cout << endl;
-            cout << "labels1: ";
-            for (auto label : labels1) {
-                cout << "[";
-                for (auto i : label) {
-                    cout << i << " ";
-                }
-                cout << "] ";
-            }
-            cout << endl;
-
-            cout << "nodes2: ";
-            for (auto p : l2) {
-                cout << p.first->id << " ";
-            }
-            for (auto leaf : leaves2) {
-                cout << leaf->id << " ";
-            }
-            cout << endl;
-            cout << "labels2: ";
-            for (auto label : labels2) {
-                cout << "[";
-                for (auto i : label) {
-                    cout << i << " ";
-                }
-                cout << "] ";
-            }
-            cout << endl;
-
 
             if (labels1 != labels2) {
                 return false;
@@ -162,45 +127,34 @@ public:
 
             unique(labels1.begin(), labels1.end());
 
-            unordered_map<Node *, vector<int>> tmp1;
-            unordered_map<Node *, vector<int>> tmp2;
+            map<Node *, vector<int>> tmp1;
+            map<Node *, vector<int>> tmp2;
 
-            for (auto &p : l1) {
+            map<vector<int>, int> label_integer_map;
+            for (int j = 0; j < labels1.size(); j++) {
+                label_integer_map[labels1[j]] = j+1;
+            }
+
+            /*for (auto &p : l1) {
                 if (p.first->parent != nullptr) {
-                    int number = 0;
-
-                    for (int j = 0; j < labels1.size(); j++) {
-                        if (labels1[j] == p.second) {
-                            number = j;
-                        }
-                    }
-
-                    tmp1[p.first->parent].push_back(number);
+                    tmp1[p.first->parent].push_back(label_integer_map[p.second]);
                 }
             }
             for (auto leaf : leaves1) {
-                tmp1[leaf].push_back({0});
+                tmp1[leaf].push_back({1});
             }
 
             for (auto &p : l2) {
                 if (p.first->parent != nullptr) {
-                    int number = 0;
-
-                    for (int j = 0; j < labels1.size(); j++) {
-                        if (labels1[j] == p.second) {
-                            number = j;
-                        }
-                    }
-
-                    tmp2[p.first->parent].push_back(number);
+                    tmp2[p.first->parent].push_back(label_integer_map[p.second]);
                 }
             }
             for (auto leaf : leaves2) {
-                tmp2[leaf].push_back({0});
+                tmp2[leaf].push_back({1});
             }
 
             l1 = std::move(tmp1);
-            l2 = std::move(tmp2);
+            l2 = std::move(tmp2);*/
         }
 
         return true;
@@ -399,11 +353,26 @@ int main() {
 
     unordered_map<int, vector<SubTree>> subtree_map;
 
+    /*for (int i = 0; i < adjacency_map.size(); i++) {
+        cout << "[" << i << "]: ";
+        for (auto k : adjacency_map[i]) {
+            cout << k << " ";
+        }
+        cout << endl;
+    }*/
+
     int ans = 0;
     bool whole_tree = false;
 
     for (int i = 0; i < n; i++) {
         SubTree sub_tree(i, r, n, adjacency_map);
+
+        /*cout << "subtree " << i << endl;
+        cout << "centers: ";
+        for (auto c : sub_tree.getCenters()) {
+            cout << c << " ";
+        }
+        cout << endl;*/
 
         int cnt = sub_tree.getCnt();
         if (cnt == n) {
