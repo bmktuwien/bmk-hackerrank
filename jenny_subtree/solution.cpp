@@ -21,50 +21,50 @@ public:
             _lvl(0),
             _num_leaves(0) {
         vector<bool> visited(n, false);
-
-        vector<Node *> nodes;
-        _root = new Node();
-        _root->id = root;
-        nodes.push_back(_root);
+        vector<int> nodes;
+        nodes.push_back(root);
         visited[root] = true;
 
-        while (!nodes.empty()) {
-            vector<Node *> tmp;
-            vector<Node *> leaves;
-            for (auto n1 : nodes) {
+        _lvl_children_cnt.emplace_back(vector<int>({}));
 
-                bool has_children = false;
-                for (auto i : adjacency_map[n1->id]) {
+        while (!nodes.empty()) {
+            vector<int> tmp;
+            vector<int> lvl_nodes;
+            int leaves_cnt = 0;
+
+            for (auto n1 : nodes) {
+                int children_cnt = 0;
+
+                for (auto i : adjacency_map[n1]) {
                     if (!visited[i]) {
-                        has_children = true;
                         visited[i] = true;
-                        auto n2 = new Node();
-                        n2->id = i;
-                        n2->parent = n1;
-                        tmp.push_back(n2);
+                        tmp.push_back(i);
+                        children_cnt++;
                         _cnt++;
                     }
                 }
 
-                if (!has_children) {
+                if (children_cnt > 0) {
+                    leaves_cnt++;
                     _num_leaves++;
-                    leaves.push_back(n1);
                 }
+
+                lvl_nodes.push_back(children_cnt);
             }
 
             nodes = std::move(tmp);
 
-            _lvl_leaves.push_back(leaves);
+            if (!nodes.empty()) {
+                _lvl_children_cnt.push_back(lvl_nodes);
+            }
+
+            _lvl_leaves_cnt.push_back(leaves_cnt);
             _lvl++;
         }
     }
 
-    Node *getRoot() {
-        return _root;
-    }
-
     int getMaxLevel() const {
-        return _lvl_leaves.size();
+        return _lvl_children_cnt.size();
     }
 
     int getCnt() const {
@@ -75,13 +75,17 @@ public:
         return _num_leaves;
     }
 
-    vector<Node *> getLeaves(int lvl) const {
-        return _lvl_leaves[lvl];
+    int getLeavesCnt(int lvl) const {
+        return _lvl_leaves_cnt[lvl];
+    }
+
+    const vector<int> &getChildrenCnt(int lvl) const {
+        return _lvl_children_cnt[lvl];
     }
 
     bool isomorph(const RootedTree &t2) {
-        map<Node *, vector<int>> l1;
-        map<Node *, vector<int>> l2;
+        vector<vector<int>> l1;
+        vector<vector<int>> l2;
 
         if (getMaxLevel() != t2.getMaxLevel()) {
             return false;
@@ -92,30 +96,20 @@ public:
         }
 
         for (int l = getMaxLevel() - 1; l >= 0; l--) {
-            auto leaves1 = getLeaves(l);
-            auto leaves2 = t2.getLeaves(l);
-
-            if (leaves1.size() != leaves2.size()) {
+            if (getLeavesCnt(l) != t2.getLeavesCnt(l)) {
                 return false;
             }
 
             vector<vector<int>> labels1;
+            for (auto &v : l1) {
+                sort(v.begin(), v.end());
+                labels1.push_back(v);
+            }
+
             vector<vector<int>> labels2;
-
-            for (auto &p : l1) {
-                sort(p.second.begin(), p.second.end());
-                labels1.push_back(p.second);
-            }
-            for (int i = 0; i < leaves1.size(); i++) {
-                labels1.emplace_back(vector<int>({0}));
-            }
-
-            for (auto &p : l2) {
-                sort(p.second.begin(), p.second.end());
-                labels2.push_back(p.second);
-            }
-            for (int i = 0; i < leaves2.size(); i++) {
-                labels2.emplace_back(vector<int>({0}));
+            for (auto &v : l2) {
+                sort(v.begin(), v.end());
+                labels2.push_back(v);
             }
 
             sort(labels1.begin(), labels1.end());
@@ -125,47 +119,70 @@ public:
                 return false;
             }
 
-            unique(labels1.begin(), labels1.end());
+            auto x = unique(labels1.begin(), labels1.end());
 
-            map<Node *, vector<int>> tmp1;
-            map<Node *, vector<int>> tmp2;
+            vector<vector<int>> tmp1;
+            vector<vector<int>> tmp2;
 
             map<vector<int>, int> label_integer_map;
-            for (int j = 0; j < labels1.size(); j++) {
-                label_integer_map[labels1[j]] = j+1;
+            int idx = 1;
+            for (auto it = labels1.begin(); it != x; it++) {
+                label_integer_map[*it] = idx;
+                idx++;
             }
 
-            /*for (auto &p : l1) {
-                if (p.first->parent != nullptr) {
-                    tmp1[p.first->parent].push_back(label_integer_map[p.second]);
+            auto &children_cnts_1 = getChildrenCnt(l);
+            idx = 0;
+            for (auto cnt : children_cnts_1) {
+                if (cnt > 0) {
+                    vector<int> label;
+                    while (cnt--) {
+                        if (l1.empty()) {
+                            label.push_back(1);
+                        } else {
+                            label.push_back(label_integer_map[l1[idx]]);
+                            idx++;
+                        }
+
+                    }
+                    tmp1.push_back(label);
+                } else {
+                    tmp1.emplace_back(vector<int>({0}));
                 }
-            }
-            for (auto leaf : leaves1) {
-                tmp1[leaf].push_back({1});
             }
 
-            for (auto &p : l2) {
-                if (p.first->parent != nullptr) {
-                    tmp2[p.first->parent].push_back(label_integer_map[p.second]);
+            auto &children_cnts_2 = t2.getChildrenCnt(l);
+            idx = 0;
+            for (auto cnt : children_cnts_2) {
+                if (cnt > 0) {
+                    vector<int> label;
+                    while (cnt--) {
+                        if (l2.empty()) {
+                            label.push_back(1);
+                        } else {
+                            label.push_back(label_integer_map[l2[idx]]);
+                            idx++;
+                        }
+                    }
+                    tmp2.push_back(label);
+                } else {
+                    tmp2.emplace_back(vector<int>({0}));
                 }
-            }
-            for (auto leaf : leaves2) {
-                tmp2[leaf].push_back({1});
             }
 
             l1 = std::move(tmp1);
-            l2 = std::move(tmp2);*/
+            l2 = std::move(tmp2);
         }
 
         return true;
     }
 
 private:
-    Node *_root{nullptr};
     int _lvl;
     int _cnt;
     int _num_leaves;
-    vector<vector<Node *>> _lvl_leaves;
+    vector<int> _lvl_leaves_cnt;
+    vector<vector<int>> _lvl_children_cnt;
 };
 
 unordered_map<int, vector<RootedTree>> cache;
@@ -176,11 +193,10 @@ public:
             _n(n),
             _v(v),
             _lvl(0),
-            _cnt(1) {
-
-        vector<int> parent_map(n, -1);
-        vector<vector<int>> children_map(_n);
-
+            _cnt(1),
+            _max_leaf(-1),
+            _parent_map(n, -1),
+            _children_map(n) {
         vector<bool> visited(_n, false);
         vector<int> nodes;
 
@@ -188,7 +204,6 @@ public:
         visited[v] = true;
 
         int max_level = 0;
-        int max_leaf = v;
 
         while (_lvl <= r && !nodes.empty()) {
             vector<int> tmp;
@@ -196,7 +211,7 @@ public:
             for (auto node : nodes) {
                 if (_lvl > max_level) {
                     max_level = _lvl;
-                    max_leaf = node;
+                    _max_leaf = node;
                 }
 
                 if (_lvl < r) {
@@ -207,8 +222,8 @@ public:
                             _edges.emplace_back(node, i);
                             _cnt++;
 
-                            parent_map[i] = node;
-                            children_map[node].push_back(i);
+                            _parent_map[i] = node;
+                            _children_map[node].push_back(i);
                         }
                     }
                 }
@@ -217,30 +232,6 @@ public:
 
             nodes = std::move(tmp);
             _lvl++;
-        }
-
-        // FIXME: hacky optimization
-        if (_cnt == _n) {
-            return;
-        }
-
-        visited.clear();
-        visited.resize(_n, false);
-        int d = findDiameter(max_leaf, visited, parent_map, children_map);
-
-        vector<int> medians;
-        medians.push_back(d / 2);
-        if (d % 2 != 0) {
-            medians.push_back(d / 2 + 1);
-        }
-
-        for (auto median : medians) {
-            int center = max_leaf;
-            while (median--) {
-                assert(parent_map[center] != -1);
-                center = parent_map[center];
-            }
-            _centers.push_back(center);
         }
     }
 
@@ -260,11 +251,32 @@ public:
         return _edges;
     }
 
-    vector<int> getCenters() const {
+    vector<int> getCenters() {
+        if (_centers.empty()) {
+            vector<bool> visited(_n, false);
+            int d = findDiameter(_max_leaf, visited, _parent_map, _children_map);
+
+            vector<int> medians;
+            medians.push_back(d / 2);
+            if (d % 2 != 0) {
+                medians.push_back(d / 2 + 1);
+            }
+
+            for (auto median : medians) {
+                int center = _max_leaf;
+                while (median--) {
+                    assert(_parent_map[center] != -1);
+                    center = _parent_map[center];
+                }
+
+                _centers.push_back(center);
+            }
+        }
+
         return _centers;
     }
 
-    bool isomorph(const SubTree &t2) {
+    bool isomorph(SubTree &t2) {
         if (getCenters().size() != t2.getCenters().size()) {
             return false;
         }
@@ -304,11 +316,14 @@ private:
     int _lvl;
     int _cnt;
     int _v;
+    int _max_leaf;
+    vector<int> _parent_map;
+    vector<vector<int>> _children_map;
     vector<pair<int, int>> _edges;
     vector<int> _centers;
 
     int findDiameter(int v, vector<bool> &visited, const vector<int> &parent_map,
-                     const vector<vector<int>> &children_map) {
+                     const vector<vector<int>> &children_map) const {
         int d = 0;
         visited[v] = true;
 
