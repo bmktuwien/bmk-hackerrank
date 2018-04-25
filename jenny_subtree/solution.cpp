@@ -4,16 +4,10 @@
 
 #include <bits/stdc++.h>
 #include <vector>
-#include <unordered_map>
 
 using namespace std;
 
 class RootedTree {
-
-    struct Node {
-        int id{-1};
-        Node *parent{nullptr};
-    };
 
 public:
     RootedTree(int root, size_t n, vector<vector<int>> &adjacency_map) :
@@ -368,26 +362,11 @@ int main() {
 
     unordered_map<int, vector<SubTree>> subtree_map;
 
-    /*for (int i = 0; i < adjacency_map.size(); i++) {
-        cout << "[" << i << "]: ";
-        for (auto k : adjacency_map[i]) {
-            cout << k << " ";
-        }
-        cout << endl;
-    }*/
-
     int ans = 0;
     bool whole_tree = false;
 
     for (int i = 0; i < n; i++) {
         SubTree sub_tree(i, r, n, adjacency_map);
-
-        /*cout << "subtree " << i << endl;
-        cout << "centers: ";
-        for (auto c : sub_tree.getCenters()) {
-            cout << c << " ";
-        }
-        cout << endl;*/
 
         int cnt = sub_tree.getCnt();
         if (cnt == n) {
