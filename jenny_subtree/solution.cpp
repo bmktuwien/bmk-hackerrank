@@ -10,8 +10,7 @@ using namespace std;
 class RootedTree {
 
 public:
-    RootedTree(int root, size_t n, vector<vector<int>> &adjacency_map) :
-            _cnt(1),
+    RootedTree(int root, size_t n, const vector<vector<int>> &adjacency_map) :
             _lvl(0),
             _num_leaves(0) {
         vector<bool> visited(n, false);
@@ -19,22 +18,21 @@ public:
         nodes.push_back(root);
         visited[root] = true;
 
-        _lvl_children_cnt.emplace_back(vector<int>({}));
+        _lvl_degrees.emplace_back(vector<int>({}));
 
         while (!nodes.empty()) {
             vector<int> tmp;
             vector<int> lvl_nodes;
             int leaves_cnt = 0;
 
-            for (auto n1 : nodes) {
+            for (auto node : nodes) {
                 int children_cnt = 0;
 
-                for (auto i : adjacency_map[n1]) {
+                for (auto i : adjacency_map[node]) {
                     if (!visited[i]) {
                         visited[i] = true;
                         tmp.push_back(i);
                         children_cnt++;
-                        _cnt++;
                     }
                 }
 
@@ -49,7 +47,7 @@ public:
             nodes = std::move(tmp);
 
             if (!nodes.empty()) {
-                _lvl_children_cnt.push_back(lvl_nodes);
+                _lvl_degrees.push_back(lvl_nodes);
             }
 
             _lvl_leaves_cnt.push_back(leaves_cnt);
@@ -58,11 +56,7 @@ public:
     }
 
     int getMaxLevel() const {
-        return _lvl_children_cnt.size();
-    }
-
-    int getCnt() const {
-        return _cnt;
+        return _lvl;
     }
 
     int getNumLeaves() const {
@@ -73,13 +67,13 @@ public:
         return _lvl_leaves_cnt[lvl];
     }
 
-    const vector<int> &getChildrenCnt(int lvl) const {
-        return _lvl_children_cnt[lvl];
+    const vector<int> &getDegrees(int lvl) const {
+        return _lvl_degrees[lvl];
     }
 
     bool isomorph(const RootedTree &t2) {
-        vector<vector<int>> l1;
-        vector<vector<int>> l2;
+        vector<int> l1;
+        vector<int> l2;
 
         if (getMaxLevel() != t2.getMaxLevel()) {
             return false;
@@ -94,15 +88,8 @@ public:
                 return false;
             }
 
-            vector<vector<int>> labels1;
-            for (auto &v : l1) {
-                labels1.push_back(v);
-            }
-
-            vector<vector<int>> labels2;
-            for (auto &v : l2) {
-                labels2.push_back(v);
-            }
+            vector<int> labels1 = l1;
+            vector<int> labels2 = l2;
 
             sort(labels1.begin(), labels1.end());
             sort(labels2.begin(), labels2.end());
@@ -111,58 +98,66 @@ public:
                 return false;
             }
 
-            auto x = unique(labels1.begin(), labels1.end());
-
-            vector<vector<int>> tmp1;
-            vector<vector<int>> tmp2;
-
+            vector<int> tmp1;
+            vector<int> tmp2;
             map<vector<int>, int> label_integer_map;
-            int idx = 1;
-            for (auto it = labels1.begin(); it != x; it++) {
-                label_integer_map[*it] = idx;
-                idx++;
-            }
 
-            auto &children_cnts_1 = getChildrenCnt(l);
-            idx = 0;
-            for (auto cnt : children_cnts_1) {
+            auto &degrees_1 = getDegrees(l);
+            int idx = 0;
+            int label_integer = 1;
+
+            for (auto cnt : degrees_1) {
                 if (cnt > 0) {
                     vector<int> label;
                     while (cnt--) {
                         if (l1.empty()) {
                             label.push_back(1);
                         } else {
-                            label.push_back(label_integer_map[l1[idx]]);
+                            label.push_back(l1[idx]);
                             idx++;
                         }
-
                     }
 
                     sort(label.begin(), label.end());
-                    tmp1.push_back(label);
+
+                    auto it = label_integer_map.find(label);
+                    if (it != label_integer_map.end()) {
+                        tmp1.push_back(it->second);
+                    } else {
+                        tmp1.push_back(label_integer);
+                        label_integer_map[label] = label_integer;
+                        label_integer++;
+                    }
+
                 } else {
-                    tmp1.emplace_back(vector<int>({0}));
+                    tmp1.emplace_back(0);
                 }
             }
 
-            auto &children_cnts_2 = t2.getChildrenCnt(l);
+            auto &degrees_2 = t2.getDegrees(l);
             idx = 0;
-            for (auto cnt : children_cnts_2) {
+            for (auto cnt : degrees_2) {
                 if (cnt > 0) {
                     vector<int> label;
                     while (cnt--) {
                         if (l2.empty()) {
                             label.push_back(1);
                         } else {
-                            label.push_back(label_integer_map[l2[idx]]);
+                            label.push_back(l2[idx]);
                             idx++;
                         }
                     }
 
                     sort(label.begin(), label.end());
-                    tmp2.push_back(label);
+
+                    auto it = label_integer_map.find(label);
+                    if (it != label_integer_map.end()) {
+                        tmp2.push_back(it->second);
+                    } else {
+                        return false;
+                    }
                 } else {
-                    tmp2.emplace_back(vector<int>({0}));
+                    tmp2.emplace_back(0);
                 }
             }
 
@@ -175,10 +170,9 @@ public:
 
 private:
     int _lvl;
-    int _cnt;
     int _num_leaves;
     vector<int> _lvl_leaves_cnt;
-    vector<vector<int>> _lvl_children_cnt;
+    vector<vector<int>> _lvl_degrees;
 };
 
 unordered_map<int, vector<RootedTree>> cache;
@@ -187,7 +181,7 @@ class SubTree {
 public:
     SubTree(int v, int r, int n, const vector<vector<int>> &adjacency_map) :
             _n(n),
-            _v(v),
+            _root(v),
             _lvl(0),
             _cnt(1),
             _max_leaf(-1),
@@ -239,8 +233,8 @@ public:
         return _cnt;
     }
 
-    int getV() const {
-        return _v;
+    int getRoot() const {
+        return _root;
     }
 
     const vector<pair<int, int>> &getEdges() const {
@@ -250,7 +244,7 @@ public:
     vector<int> getCenters() {
         if (_centers.empty()) {
             vector<bool> visited(_n, false);
-            int d = findDiameter(_max_leaf, visited, _parent_map, _children_map);
+            int d = calcDiameter(_max_leaf, visited, _parent_map, _children_map);
 
             vector<int> medians;
             medians.push_back(d / 2);
@@ -285,7 +279,8 @@ public:
 
         RootedTree t1_rooted(getCenters()[0], _n, adjacency_map_t1);
 
-        if (cache.find(t2.getV()) == cache.end()) {
+        // cache rooted trees of t2
+        if (cache.find(t2.getRoot()) == cache.end()) {
             vector<vector<int>> adjacency_map_t2(_n);
             for (auto edge : t2.getEdges()) {
                 adjacency_map_t2[edge.first].push_back(edge.second);
@@ -294,11 +289,11 @@ public:
 
             for (auto center : t2.getCenters()) {
                 RootedTree t2_rooted(center, _n, adjacency_map_t2);
-                cache[t2.getV()].push_back(t2_rooted);
+                cache[t2.getRoot()].push_back(t2_rooted);
             }
         }
 
-        for (auto &rt : cache[t2.getV()]) {
+        for (auto &rt : cache[t2.getRoot()]) {
             if (t1_rooted.isomorph(rt)) {
                 return true;
             }
@@ -311,21 +306,22 @@ private:
     int _n;
     int _lvl;
     int _cnt;
-    int _v;
+    int _root;
     int _max_leaf;
     vector<int> _parent_map;
     vector<vector<int>> _children_map;
     vector<pair<int, int>> _edges;
     vector<int> _centers;
 
-    int findDiameter(int v, vector<bool> &visited, const vector<int> &parent_map,
+    int calcDiameter(int v, vector<bool> &visited,
+                     const vector<int> &parent_map,
                      const vector<vector<int>> &children_map) const {
         int d = 0;
         visited[v] = true;
 
         if (parent_map[v] != -1) {
             if (!visited[parent_map[v]]) {
-                int t = findDiameter(parent_map[v], visited, parent_map,
+                int t = calcDiameter(parent_map[v], visited, parent_map,
                                      children_map) + 1;
                 if (t > d) {
                     d = t;
@@ -335,7 +331,7 @@ private:
 
         for (auto child : children_map[v]) {
             if (!visited[child]) {
-                int t = findDiameter(child, visited, parent_map, children_map) + 1;
+                int t = calcDiameter(child, visited, parent_map, children_map) + 1;
                 if (t > d) {
                     d = t;
                 }
@@ -373,6 +369,7 @@ int main() {
 
     vector<bool> skip(n, false);
 
+    // try to mark subtrees which consist of all nodes as skippable
     if (centered_tree.getMaxLevel() < r) {
         int center = centers[0];
         vector<bool> visited(n, false);
@@ -404,6 +401,7 @@ int main() {
         }
     }
 
+    // generated all subtrees and count only non-isomorphic subtrees
     for (int i = 0; i < n; i++) {
         if (skip[i]) {
             continue;
