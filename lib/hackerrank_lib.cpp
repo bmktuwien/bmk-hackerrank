@@ -95,56 +95,74 @@ public:
         std::vector<Node *> children;
     };
 
-    explicit Tree(const std::vector<std::pair<int,int>>& edges) {
-        _nodes.resize(edges.size() + 1);
+    Tree(int root, const std::vector<std::pair<int,int>>& edges) :
+            _lvl(0),
+            _nodes(edges.size() + 1) {
+        auto n = edges.size() + 1;
 
+        // initialize node ids
         for (int i = 0; i < _nodes.size(); i++) {
             _nodes[i].id = i;
         }
 
+        std::vector<std::vector<int>> adjacency_map(n);
+
         for (auto &edge : edges) {
-            int xid = edge.first - 1;
-            int yid = edge.second - 1;
+            int a = edge.first;
+            int b = edge.second;
 
-            if (_nodes[yid].parent != nullptr) {
-                std::vector<Node *> stack;
-
-                Node *p = &_nodes[yid];
-                while (p != nullptr) {
-                    stack.push_back(p);
-                    p = p->parent;
-                }
-
-                while (stack.size() > 1) {
-                    p = stack.back();
-                    stack.pop_back();
-                    p->parent = stack.back();
-                }
-
-            }
-
-            _nodes[yid].parent = &_nodes[xid];
+            adjacency_map[a].push_back(b);
+            adjacency_map[b].push_back(a);
         }
 
-        for (auto &node : _nodes) {
-            if (node.parent != nullptr) {
-                node.parent->children.push_back(&_nodes[node.id]);
-            } else {
-                _root = &_nodes[node.id];
-            }
-        }
-    }
+        std::vector<Node *> nodes;
+        std::vector<bool> visited(n);
 
-    void count_nodes() {
-        _count(_root);
+        _root = &_nodes[root];
+        visited[root] = true;
+        nodes.emplace_back(&_nodes[root]);
+
+        // build the tree using BFS
+        while (!nodes.empty()) {
+            std::vector<Node *> tmp;
+            for (auto node : nodes) {
+                for (auto neighbor_id : adjacency_map[node->id]) {
+                    if (!visited[neighbor_id]) {
+                        _nodes[neighbor_id].parent = node;
+                        node->children.push_back(&_nodes[neighbor_id]);
+                        tmp.push_back(&_nodes[neighbor_id]);
+                    }
+                }
+            }
+
+            nodes = std::move(tmp);
+            _lvl++;
+        }
     }
 
     Node *getRoot() {
         return _root;
     }
 
+    Node *getById(int id) {
+        if (id >= 0 && id < _nodes.size()) {
+            return &_nodes[id];
+        } else {
+            return nullptr;
+        }
+    }
+
+    int getMaxLevel() {
+        return _lvl;
+    }
+
+    void count() {
+        _count(_root);
+    }
+
 private:
     Node *_root{nullptr};
+    int _lvl;
     std::vector<Node> _nodes;
 
     int _count(Node *node) {
