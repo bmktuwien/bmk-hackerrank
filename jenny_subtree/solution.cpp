@@ -96,13 +96,11 @@ public:
 
             vector<vector<int>> labels1;
             for (auto &v : l1) {
-                sort(v.begin(), v.end());
                 labels1.push_back(v);
             }
 
             vector<vector<int>> labels2;
             for (auto &v : l2) {
-                sort(v.begin(), v.end());
                 labels2.push_back(v);
             }
 
@@ -139,6 +137,8 @@ public:
                         }
 
                     }
+
+                    sort(label.begin(), label.end());
                     tmp1.push_back(label);
                 } else {
                     tmp1.emplace_back(vector<int>({0}));
@@ -158,6 +158,8 @@ public:
                             idx++;
                         }
                     }
+
+                    sort(label.begin(), label.end());
                     tmp2.push_back(label);
                 } else {
                     tmp2.emplace_back(vector<int>({0}));
@@ -363,16 +365,57 @@ int main() {
     unordered_map<int, vector<SubTree>> subtree_map;
 
     int ans = 0;
-    bool whole_tree = false;
+    bool whole_tree_encountered = false;
+
+    SubTree tree(0, n, n, adjacency_map);
+    auto centers = tree.getCenters();
+    SubTree centered_tree(centers[0], n, n, adjacency_map);
+
+    vector<bool> skip(n, false);
+
+    if (centered_tree.getMaxLevel() < r) {
+        int center = centers[0];
+        vector<bool> visited(n, false);
+        vector<int> nodes;
+
+        int lvl = 0;
+        whole_tree_encountered = true;
+        ans++;
+        nodes.push_back(center);
+        skip[center] = true;
+
+        int r2 = r - centered_tree.getMaxLevel();
+        while (lvl <= r2 && !nodes.empty()) {
+            vector<int> tmp;
+
+            for (auto node : nodes) {
+                if (lvl < r2) {
+                    for (auto i : adjacency_map[node]) {
+                        if (!skip[i]) {
+                            skip[node] = true;
+                            tmp.push_back(i);
+                        }
+                    }
+                }
+            }
+
+            nodes = std::move(tmp);
+            lvl++;
+        }
+    }
 
     for (int i = 0; i < n; i++) {
+        if (skip[i]) {
+            continue;
+        }
+
         SubTree sub_tree(i, r, n, adjacency_map);
 
         int cnt = sub_tree.getCnt();
         if (cnt == n) {
-            if (!whole_tree) {
+            if (!whole_tree_encountered) {
                 ans++;
-                whole_tree = true;
+                whole_tree_encountered = true;
             }
             continue;
         }
