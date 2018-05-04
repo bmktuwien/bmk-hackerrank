@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 
@@ -31,6 +32,32 @@ void naive_solver(const vector<int>& a) {
     cout << max << endl;
 }
 
+void solver(const vector<int>& a) {
+    if (a.size() < 2) {
+        cout << "input vector size is less than 2" << endl;
+        return;
+    }
+
+    long acc = 0;
+    long max_ending_here = 0;
+    long max_so_far = 0;
+
+    for (int i = 1; i < a.size(); i++) {
+        acc += a[i-1];
+
+        if (max_ending_here + a[i]*acc < a[i]*a[i-1]) {
+            acc = a[i-1];
+            max_ending_here = a[i]*a[i-1];
+        } else {
+            max_ending_here += a[i]*acc;
+        }
+
+        max_so_far = max<long>(max_ending_here, max_so_far);
+    }
+
+    cout << max_so_far << endl;
+}
+
 int main() {
     int n;
     cin >> n;
@@ -42,6 +69,7 @@ int main() {
         a.push_back(x);
     }
 
-    naive_solver(a);
+    solver(a);
+    //naive_solver(a);
 }
 
