@@ -24,6 +24,7 @@ void naive_solver(const vector<int>& a) {
             acc += a[j-1];
             sum += acc * a[j];
             if (sum > max) {
+                cout << "new max: " <<  sum << " from " << i << " to " << j << endl;
                 max = sum;
             }
         }
@@ -38,21 +39,38 @@ void solver(const vector<int>& a) {
         return;
     }
 
-    long acc = 0;
-    long max_ending_here = 0;
+    long max_ending_here = a[0];
+    long min_ending_here = a[0];
+
+    long sum1 = 0;
+    long sum2 = 0;q
     long max_so_far = 0;
 
     for (int i = 1; i < a.size(); i++) {
-        acc += a[i-1];
-
-        if (max_ending_here + a[i]*acc < a[i]*a[i-1]) {
-            acc = a[i-1];
-            max_ending_here = a[i]*a[i-1];
+        if (max_ending_here + a[i] > a[i]) {
+            sum1 += max_ending_here * a[i];
+            cout << "max_sum[" << i << "]: " << sum1 << endl;
+            if (max_so_far < sum1) {
+                max_so_far = sum1;
+            }
         } else {
-            max_ending_here += a[i]*acc;
+            cout << "******************************" << endl;
+            sum1 = 0;
         }
 
-        max_so_far = max<long>(max_ending_here, max_so_far);
+        if (min_ending_here + a[i] < a[i]) {
+            sum2 += min_ending_here * a[i];
+            cout << "min_sum[" << i << "]: " << sum2 << endl;
+            if (max_so_far < sum2) {
+                max_so_far = sum2;
+            }
+        } else {
+            cout << "-------------------------------" << endl;
+            sum2 = 0;
+        }
+
+        max_ending_here = max<long>(a[i], max_ending_here + a[i]);
+        min_ending_here = min<long>(a[i], min_ending_here + a[i]);
     }
 
     cout << max_so_far << endl;
@@ -70,6 +88,19 @@ int main() {
     }
 
     solver(a);
-    //naive_solver(a);
+    naive_solver(a);
+
+    long sum = 0;
+    for (int i = 333; i <= 1131; i++) {
+        sum += a[i];
+    }
+    cout << "shit1: " << sum << endl;
+
+
+    sum = 0;
+    for (int i = 430; i <= 1131; i++) {
+        sum += a[i];
+    }
+    cout << "shit2: " << sum << endl;
 }
 
