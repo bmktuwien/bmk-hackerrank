@@ -5,13 +5,15 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <random>
+#include <functional>
 
 using namespace std;
 
-void naive_solver(const vector<int>& a) {
+long naive_solver(const vector<int>& a) {
     if (a.size() < 2) {
         cout << "input vector size is less than 2" << endl;
-        return;
+        return 0;
     }
 
     long max = 0;
@@ -31,53 +33,160 @@ void naive_solver(const vector<int>& a) {
     }
 
     cout << max << endl;
+
+    return max;
 }
 
-void solver(const vector<int>& a) {
-    if (a.size() < 2) {
-        cout << "input vector size is less than 2" << endl;
-        return;
+long solver(const vector<int>& a, int l, int r) {
+    if (l == r) {
+        return 0;
     }
 
-    long max_ending_here = a[0];
-    long min_ending_here = a[0];
+    int m = (l + r) / 2;
 
-    long sum1 = 0;
-    long sum2 = 0;q
-    long max_so_far = 0;
+    long sum_max_l = 0;
+    long res_max_l = 0;
 
-    for (int i = 1; i < a.size(); i++) {
-        if (max_ending_here + a[i] > a[i]) {
-            sum1 += max_ending_here * a[i];
-            cout << "max_sum[" << i << "]: " << sum1 << endl;
-            if (max_so_far < sum1) {
-                max_so_far = sum1;
+    long sum_min_l = 0;
+    long res_min_l = 0;
+
+    long run_var = 0;
+    long run_res = 0;
+    for (int i = m; i >= l; i--) {
+        if (i < m) {
+            run_res += run_var * a[i];
+        }
+        run_var += a[i];
+
+        if (run_var > sum_max_l) {
+            sum_max_l = run_var;
+
+            if (i < m) {
+                res_max_l = run_res;
             }
-        } else {
-            cout << "******************************" << endl;
-            sum1 = 0;
         }
 
-        if (min_ending_here + a[i] < a[i]) {
-            sum2 += min_ending_here * a[i];
-            cout << "min_sum[" << i << "]: " << sum2 << endl;
-            if (max_so_far < sum2) {
-                max_so_far = sum2;
-            }
-        } else {
-            cout << "-------------------------------" << endl;
-            sum2 = 0;
-        }
+        if (run_var < sum_min_l) {
+            sum_min_l = run_var;
 
-        max_ending_here = max<long>(a[i], max_ending_here + a[i]);
-        min_ending_here = min<long>(a[i], min_ending_here + a[i]);
+            if (i < m) {
+                res_min_l = run_res;
+            }
+        }
     }
 
-    cout << max_so_far << endl;
+    long res = 0;
+    run_var = 0;
+    run_res = 0;
+    for (int i = m+1; i <= r; i++) {
+        if (i > m+1) {
+            run_res += run_var * a[i];
+        }
+        run_var += a[i];
+
+        long tmp = res_max_l + run_res + (sum_max_l * run_var);
+        long tmp2 = res_min_l + run_res + (sum_min_l * run_var);
+
+        if (tmp > res) {
+            res = tmp;
+        }
+
+        if (tmp2 > res) {
+            res = tmp2;
+        }
+    }
+
+    long sum_max_r = 0;
+    long res_max_r = 0;
+
+    long sum_min_r = 0;
+    long res_min_r = 0;
+
+    run_var = 0;
+    run_res = 0;
+    for (int i = m+1; i <= r; i++) {
+        if (i > m+1) {
+            run_res += run_var * a[i];
+        }
+        run_var += a[i];
+
+        if (run_var > sum_max_r) {
+            sum_max_r = run_var;
+
+            if (i > m+1) {
+                res_max_r = run_res;
+            }
+        }
+
+        if (run_var < sum_min_r) {
+            sum_min_r = run_var;
+
+            if (i > m+1) {
+                res_min_r = run_res;
+            }
+        }
+    }
+
+    run_var = 0;
+    run_res = 0;
+    for (int i = m; i >= l; i--) {
+        if (i < m) {
+            run_res += run_var * a[i];
+        }
+        run_var += a[i];
+
+        long tmp = res_max_r + run_res + (sum_max_r * run_var);
+        long tmp2 = res_min_r + run_res + (sum_min_r * run_var);
+
+        if (tmp > res) {
+            res = tmp;
+        }
+
+        if (tmp2 > res) {
+            res = tmp2;
+        }
+    }
+
+    cout << "m: " << m << " res: " << res << endl;
+
+    long res2 = solver(a, l, m);
+    long res3 = solver(a, m+1,r);
+
+    return max<long>({res,res2,res3});
 }
 
 int main() {
-    int n;
+
+    random_device rnd_device;
+    // Specify the engine and distribution.
+
+    while (true) {
+        mt19937 mersenne_engine(rnd_device());
+        uniform_int_distribution<int> dist(-10, 10);
+
+        auto gen = std::bind(dist, mersenne_engine);
+        vector<int> vec(6);
+        generate(begin(vec), end(vec), gen);
+
+        cout << "input: ";
+        for (auto a : vec) {
+            cout << a << " ";
+        }
+        cout << endl;
+
+        auto b1 = solver(vec, 0, vec.size() - 1);
+        auto b2 = naive_solver(vec);
+
+        cout << "b1: " << b1 << endl;
+        cout << "b2: " << b2 << endl;
+
+        if (b1 != b2) {
+            break;
+        }
+    }
+
+
+    /*int n;
     cin >> n;
 
     vector<int> a;
@@ -87,20 +196,10 @@ int main() {
         a.push_back(x);
     }
 
-    solver(a);
+    long res = solver(a, 0, a.size()-1);
     naive_solver(a);
 
-    long sum = 0;
-    for (int i = 333; i <= 1131; i++) {
-        sum += a[i];
-    }
-    cout << "shit1: " << sum << endl;
+    cout << "res: " << res << endl;*/
 
-
-    sum = 0;
-    for (int i = 430; i <= 1131; i++) {
-        sum += a[i];
-    }
-    cout << "shit2: " << sum << endl;
 }
 
