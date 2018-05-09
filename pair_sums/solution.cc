@@ -44,11 +44,14 @@ long solver(const vector<int>& a, int l, int r) {
 
     int m = (l + r) / 2;
 
-    long sum_max_l = 0;
-    long res_max_l = 0;
+    long sum_max_l = numeric_limits<long>::min();
+    long x1 = 0;
 
-    long sum_min_l = 0;
-    long res_min_l = 0;
+    long sum_min_l = numeric_limits<long>::max();
+    long x2 = 0;
+
+    long x3 = numeric_limits<long>::min();
+    long sum_3 = 0;
 
     long run_var = 0;
     long run_res = 0;
@@ -62,7 +65,7 @@ long solver(const vector<int>& a, int l, int r) {
             sum_max_l = run_var;
 
             if (i < m) {
-                res_max_l = run_res;
+                x1 = run_res;
             }
         }
 
@@ -70,8 +73,13 @@ long solver(const vector<int>& a, int l, int r) {
             sum_min_l = run_var;
 
             if (i < m) {
-                res_min_l = run_res;
+                x2 = run_res;
             }
+        }
+
+        if (run_res > x3) {
+            sum_3 = run_var;
+            x3 = run_res;
         }
     }
 
@@ -84,8 +92,9 @@ long solver(const vector<int>& a, int l, int r) {
         }
         run_var += a[i];
 
-        long tmp = res_max_l + run_res + (sum_max_l * run_var);
-        long tmp2 = res_min_l + run_res + (sum_min_l * run_var);
+        long tmp = x1 + run_res + (sum_max_l * run_var);
+        long tmp2 = x2 + run_res + (sum_min_l * run_var);
+        long tmp3 = x3 + run_res + (sum_3 * run_var);
 
         if (tmp > res) {
             res = tmp;
@@ -94,13 +103,20 @@ long solver(const vector<int>& a, int l, int r) {
         if (tmp2 > res) {
             res = tmp2;
         }
+
+        if (tmp3 > res) {
+            res = tmp3;
+        }
     }
 
-    long sum_max_r = 0;
+    long sum_max_r = numeric_limits<long>::min();;
     long res_max_r = 0;
 
-    long sum_min_r = 0;
+    long sum_min_r = numeric_limits<long>::max();;
     long res_min_r = 0;
+
+    x3 = numeric_limits<long>::min();
+    sum_3 = 0;
 
     run_var = 0;
     run_res = 0;
@@ -125,6 +141,11 @@ long solver(const vector<int>& a, int l, int r) {
                 res_min_r = run_res;
             }
         }
+
+        if (run_res > x3) {
+            sum_3 = run_var;
+            x3 = run_res;
+        }
     }
 
     run_var = 0;
@@ -137,6 +158,7 @@ long solver(const vector<int>& a, int l, int r) {
 
         long tmp = res_max_r + run_res + (sum_max_r * run_var);
         long tmp2 = res_min_r + run_res + (sum_min_r * run_var);
+        long tmp3 = x3 + run_res + (sum_3 * run_var);
 
         if (tmp > res) {
             res = tmp;
@@ -144,6 +166,10 @@ long solver(const vector<int>& a, int l, int r) {
 
         if (tmp2 > res) {
             res = tmp2;
+        }
+
+        if (tmp3 > res) {
+            res = tmp3;
         }
     }
 
@@ -165,7 +191,7 @@ int main() {
         uniform_int_distribution<int> dist(-10, 10);
 
         auto gen = std::bind(dist, mersenne_engine);
-        vector<int> vec(6);
+        vector<int> vec(7);
         generate(begin(vec), end(vec), gen);
 
         cout << "input: ";
