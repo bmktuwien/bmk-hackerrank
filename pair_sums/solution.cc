@@ -44,14 +44,8 @@ long solver(const vector<int>& a, int l, int r) {
 
     int m = (l + r) / 2;
 
-    long sum_max_l = numeric_limits<long>::min();
-    long x1 = 0;
-
-    long sum_min_l = numeric_limits<long>::max();
-    long x2 = 0;
-
-    long x3 = numeric_limits<long>::min();
-    long sum_3 = 0;
+    vector<pair<long,long>> candidates_pos;
+    vector<pair<long,long>> candidates_neg;
 
     long run_var = 0;
     long run_res = 0;
@@ -61,25 +55,32 @@ long solver(const vector<int>& a, int l, int r) {
         }
         run_var += a[i];
 
-        if (run_var > sum_max_l) {
-            sum_max_l = run_var;
-
-            if (i < m) {
-                x1 = run_res;
-            }
+        if (run_var >= 0) {
+            candidates_pos.emplace_back(run_var, run_res);
+        } else {
+            candidates_neg.emplace_back(run_var, run_res);
         }
+    }
 
-        if (run_var < sum_min_l) {
-            sum_min_l = run_var;
+    sort(candidates_pos.begin(), candidates_pos.end(), greater<pair<long,long>>());
+    sort(candidates_neg.begin(), candidates_neg.end());
 
-            if (i < m) {
-                x2 = run_res;
-            }
+    long x = numeric_limits<long>::min();
+
+    vector<pair<long,long>> pos;
+    for (auto p : candidates_pos) {
+        if (p.second > x) {
+            x = p.second;
+            pos.push_back(p);
         }
+    }
 
-        if (run_res > x3) {
-            sum_3 = run_var;
-            x3 = run_res;
+    x = numeric_limits<long>::min();
+    vector<pair<long,long>> neg;
+    for (auto p : candidates_neg) {
+        if (p.second > x) {
+            x = p.second;
+            neg.push_back(p);
         }
     }
 
@@ -92,88 +93,25 @@ long solver(const vector<int>& a, int l, int r) {
         }
         run_var += a[i];
 
-        long tmp = x1 + run_res + (sum_max_l * run_var);
-        long tmp2 = x2 + run_res + (sum_min_l * run_var);
-        long tmp3 = x3 + run_res + (sum_3 * run_var);
-
-        if (tmp > res) {
-            res = tmp;
-        }
-
-        if (tmp2 > res) {
-            res = tmp2;
-        }
-
-        if (tmp3 > res) {
-            res = tmp3;
-        }
-    }
-
-    long sum_max_r = numeric_limits<long>::min();;
-    long res_max_r = 0;
-
-    long sum_min_r = numeric_limits<long>::max();;
-    long res_min_r = 0;
-
-    x3 = numeric_limits<long>::min();
-    sum_3 = 0;
-
-    run_var = 0;
-    run_res = 0;
-    for (int i = m+1; i <= r; i++) {
-        if (i > m+1) {
-            run_res += run_var * a[i];
-        }
-        run_var += a[i];
-
-        if (run_var > sum_max_r) {
-            sum_max_r = run_var;
-
-            if (i > m+1) {
-                res_max_r = run_res;
+        if (run_var >= 0) {
+            for (auto p : pos) {
+                long tmp = p.second + run_res + (p.first * run_var);
+                if (tmp > res) {
+                    res = tmp;
+                }
+            }
+        } else {
+            for (auto p : neg) {
+                long tmp = p.second + run_res + (p.first * run_var);
+                if (tmp > res) {
+                    res = tmp;
+                }
             }
         }
 
-        if (run_var < sum_min_r) {
-            sum_min_r = run_var;
-
-            if (i > m+1) {
-                res_min_r = run_res;
-            }
-        }
-
-        if (run_res > x3) {
-            sum_3 = run_var;
-            x3 = run_res;
-        }
     }
 
-    run_var = 0;
-    run_res = 0;
-    for (int i = m; i >= l; i--) {
-        if (i < m) {
-            run_res += run_var * a[i];
-        }
-        run_var += a[i];
-
-        long tmp = res_max_r + run_res + (sum_max_r * run_var);
-        long tmp2 = res_min_r + run_res + (sum_min_r * run_var);
-        long tmp3 = x3 + run_res + (sum_3 * run_var);
-
-        if (tmp > res) {
-            res = tmp;
-        }
-
-        if (tmp2 > res) {
-            res = tmp2;
-        }
-
-        if (tmp3 > res) {
-            res = tmp3;
-        }
-    }
-
-    cout << "m: " << m << " res: " << res << endl;
+    //cout << "m: " << m << " res: " << res << endl;
 
     long res2 = solver(a, l, m);
     long res3 = solver(a, m+1,r);
@@ -181,17 +119,15 @@ long solver(const vector<int>& a, int l, int r) {
     return max<long>({res,res2,res3});
 }
 
-int main() {
-
+void test() {
     random_device rnd_device;
-    // Specify the engine and distribution.
 
     while (true) {
         mt19937 mersenne_engine(rnd_device());
-        uniform_int_distribution<int> dist(-10, 10);
+        uniform_int_distribution<int> dist(-30, 30);
 
         auto gen = std::bind(dist, mersenne_engine);
-        vector<int> vec(7);
+        vector<int> vec(20);
         generate(begin(vec), end(vec), gen);
 
         cout << "input: ";
@@ -210,9 +146,10 @@ int main() {
             break;
         }
     }
+}
 
-
-    /*int n;
+int main() {
+    int n;
     cin >> n;
 
     vector<int> a;
@@ -223,9 +160,8 @@ int main() {
     }
 
     long res = solver(a, 0, a.size()-1);
-    naive_solver(a);
+    //naive_solver(a);
 
-    cout << "res: " << res << endl;*/
-
+    cout << res << endl;
 }
 
