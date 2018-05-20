@@ -16,7 +16,6 @@ void matrix_layer_rotation(const std::vector<std::vector<int>>& M, size_t r) {
 
     int l = 0;
     while (std::min<int>(n,m) - (2*l) > 0) {
-        std::cout << "layer: " << l << std::endl;
         auto p = n - (2 * l);
         auto q = m - (2 * l);
         auto x = (p + q) * 2 - 4;
@@ -51,7 +50,7 @@ void matrix_layer_rotation(const std::vector<std::vector<int>>& M, size_t r) {
                 }
                 tmp -= (q-1);
 
-                if (tmp < i) {
+                if (tmp > 0) {
                     ans[l+tmp][l] = M[i][j];
                 }
             }
@@ -60,25 +59,106 @@ void matrix_layer_rotation(const std::vector<std::vector<int>>& M, size_t r) {
         {
             int j = m - l - 1;
             for (int i = l; i < n - l; i++) {
-                std::cout << M[i][j] << " ";
+                auto tmp = y;
+                auto z = i - l + 1;
+                if (tmp < z) {
+                    ans[i-tmp][j] = M[i][j];
+                    continue;
+                }
+                tmp -= (z-1);
+
+                if (tmp < q) {
+                    ans[l][m-1-l-tmp] = M[i][j];
+                    continue;
+                }
+                tmp -= (q-1);
+
+                if (tmp < p) {
+                    ans[l+tmp][l] = M[i][j];
+                    continue;
+                }
+                tmp -= (p-1);
+
+                if (tmp < q) {
+                    ans[n-l-1][l+tmp] = M[i][j];
+                    continue;
+                }
+                tmp -= (q-1);
+
+                if (tmp > 0) {
+                    ans[n-l-1-tmp][m-l-1] = M[i][j];
+                }
             }
-            std::cout << std::endl;
         }
 
         {
             int i = l;
             for (int j = l + 1; j < m - l - 1; j++) {
-                std::cout << M[i][j] << " ";
+                auto tmp = y;
+                auto z = j - l + 1;
+                if (tmp < z) {
+                    ans[i][j-tmp] = M[i][j];
+                    continue;
+                }
+                tmp -= (z-1);
+
+                if (tmp < p) {
+                    ans[l+tmp][l] = M[i][j];
+                    continue;
+                }
+                tmp -= (p-1);
+
+                if (tmp < q) {
+                    ans[n-l-1][l+tmp] = M[i][j];
+                    continue;
+                }
+                tmp -= (q-1);
+
+                if (tmp < p) {
+                    ans[n-l-1-tmp][m-l-1] = M[i][j];
+                    continue;
+                }
+                tmp -= (p-1);
+
+                if (tmp > 0) {
+                    ans[i][m-1-l-tmp] = M[i][j];
+                }
             }
-            std::cout << std::endl;
         }
 
         {
             int i = n - l - 1;
             for (int j = l + 1; j < m - l - 1; j++) {
-                std::cout << M[i][j] << " ";
+                auto tmp = y;
+                auto z = m - l - j;
+                if (tmp < z) {
+                    ans[i][j+tmp] = M[i][j];
+                    continue;
+                }
+                tmp -= (z-1);
+
+                if (tmp < p) {
+                    ans[n-l-1-tmp][m-l-1] = M[i][j];
+                    continue;
+                }
+                tmp -= (p-1);
+
+                if (tmp < q) {
+                    ans[l][m-1-l-tmp] = M[i][j];
+                    continue;
+                }
+                tmp -= (q-1);
+
+                if (tmp < p) {
+                    ans[l+tmp][l] = M[i][j];
+                    continue;
+                }
+                tmp -= (p-1);
+
+                if (tmp > 0) {
+                    ans[i][l+tmp] = M[i][j];
+                }
             }
-            std::cout << std::endl;
         }
 
         l++;
