@@ -5,19 +5,56 @@
 #include <bits/stdc++.h>
 
 void matrix_layer_rotation(const std::vector<std::vector<int>>& M, size_t r) {
-    int n = M.size();
-    int m = M[0].size();
+    auto n = M.size();
+    auto m = M[0].size();
+
+    std::vector<std::vector<int>> ans;
+    ans.resize(n);
+    for (auto &v : ans) {
+        v.resize(m);
+    }
 
     int l = 0;
     while (std::min<int>(n,m) - (2*l) > 0) {
         std::cout << "layer: " << l << std::endl;
+        auto p = n - (2 * l);
+        auto q = m - (2 * l);
+        auto x = (p + q) * 2 - 4;
+        auto y = r % x;
 
         {
             int j = l;
             for (int i = l; i < n - l; i++) {
-                std::cout << M[i][j] << " ";
+                auto tmp = y;
+                auto z = n - l - i;
+                if (tmp < z) {
+                    ans[i+tmp][j] = M[i][j];
+                    continue;
+                }
+                tmp -= (z-1);
+
+                if (tmp < q) {
+                    ans[n-l-1][l+tmp] = M[i][j];
+                    continue;
+                }
+                tmp -= (q-1);
+
+                if (tmp < p) {
+                    ans[n-l-1-tmp][m-l-1] = M[i][j];
+                    continue;
+                }
+                tmp -= (p-1);
+
+                if (tmp < q) {
+                    ans[l][m-1-l-tmp] = M[i][j];
+                    continue;
+                }
+                tmp -= (q-1);
+
+                if (tmp < i) {
+                    ans[l+tmp][l] = M[i][j];
+                }
             }
-            std::cout << std::endl;
         }
 
         {
@@ -44,11 +81,14 @@ void matrix_layer_rotation(const std::vector<std::vector<int>>& M, size_t r) {
             std::cout << std::endl;
         }
 
-
-
-
-
         l++;
+    }
+
+    for (auto &v : ans) {
+        for (auto num : v) {
+            std::cout << num << " ";
+        }
+        std::cout << std::endl;
     }
 }
 
