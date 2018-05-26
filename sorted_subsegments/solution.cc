@@ -27,7 +27,7 @@ void solver2(std::vector<int>& a,
             }
         } else {
             bool f1 = false;
-            auto x1 = s.upper_bound(std::make_pair(it->first, it->first));
+            auto x1 = s.lower_bound(std::make_pair(it->first+1, 0));
             if (x1 != s.begin()) {
                 x1--;
 
@@ -37,7 +37,7 @@ void solver2(std::vector<int>& a,
             }
 
             bool f2 = false;
-            auto x2 = s.lower_bound(std::make_pair(it->second+1, it->second+1));
+            auto x2 = s.lower_bound(std::make_pair(it->second+1, 0));
             if (x2 != s.begin()) {
                 x2--;
                 if (it->second <= x2->second) {
@@ -113,7 +113,7 @@ void solver2(std::vector<int>& a,
             std::sort(a.begin()+it->first, a.begin()+it->second+1);
         } else {
             bool f1 = false;
-            auto x1 = s2.upper_bound(std::make_pair(it->first, it->first));
+            auto x1 = s2.lower_bound(std::make_pair(it->first+1, 0));
             if (x1 != s2.begin()) {
                 x1--;
 
@@ -123,16 +123,17 @@ void solver2(std::vector<int>& a,
             }
 
             bool f2 = false;
-            auto x2 = s2.lower_bound(std::make_pair(it->second+1, it->second+1));
+            auto x2 = s2.lower_bound(std::make_pair(it->second+1, 0));
             if (x2 != s2.begin()) {
                 x2--;
+
                 if (it->second <= x2->second) {
                     f2 = true;
                 }
             }
 
             if (f1 && f2) {
-                /*if (x1 != x2) {
+                if (x1 != x2) {
                     auto tmp1 = *x1;
                     auto tmp2 = *x2;
 
@@ -159,7 +160,7 @@ void solver2(std::vector<int>& a,
                     } else {
                         std::sort(a.begin()+it->first, a.begin()+it->second+1);
                     }
-                }*/
+                }
             } else if (f1) {
                 auto tmp = *x1;
 
@@ -198,13 +199,16 @@ void solver2(std::vector<int>& a,
                     s2.insert(std::make_pair(it->second+1, tmp.second));
                 }
 
-                if (count == 1) {
+                if (count == 0) {
                     std::sort(a.begin()+it->first, a.begin()+tmp.first);
                     std::inplace_merge(a.begin()+it->first, a.begin()+tmp.first,
                                        a.begin()+it->second+1);
                 } else {
                     std::sort(a.begin() + it->first, a.begin() + it->second + 1);
                 }
+            } else {
+                s2.insert(*it);
+                std::sort(a.begin()+it->first, a.begin()+it->second+1);
             }
         }
 
@@ -237,6 +241,7 @@ int main() {
         queries.emplace_back(std::make_pair(l, r));
     }
 
+    auto b = a;
     solver2(a, queries, k);
-    //naive_solver(a, queries, k);
+    naive_solver(b, queries, k);
 }
