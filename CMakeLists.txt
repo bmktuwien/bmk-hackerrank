@@ -21,3 +21,7 @@ add_executable(matrix_layer_rotation matrix_layer_rotation/solution.cpp)
 ################################################################################
 
 add_executable(sorted_subsegments sorted_subsegments/solution.cc)
+
+################################################################################
+
+add_executable(max_subarray_sum max_subarray_sum/solution.cc)
