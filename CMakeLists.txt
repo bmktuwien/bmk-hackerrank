@@ -25,3 +25,7 @@ add_executable(sorted_subsegments sorted_subsegments/solution.cc)
 ################################################################################
 
 add_executable(max_subarray_sum max_subarray_sum/solution.cc)
+
+################################################################################
+
+add_executable(max_palindromes max_palindromes/solution.cc)
