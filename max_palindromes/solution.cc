@@ -34,23 +34,34 @@ private:
     std::vector<long> _a;
 };
 
-long n_choose_k(int n, int k) {
+long mod_exp(long b, long e) {
+    long r = 1;
+
+    while (e > 0) {
+        if ((e & 1) == 1) {
+            r = (r * b) % MOD;
+        }
+
+        b = (b * b) % MOD;
+        e >>= 1;
+    }
+
+    return r;
+}
+
+long n_choose_k(int n, int k, const std::vector<long> &fact_map, const std::vector<long> &inv_map) {
     if (n < k) {
         return 0;
     }
-
-    long res = 1;
 
     if (k > n - k) {
         k = n - k;
     }
 
-    for (int i = 0; i < k; ++i) {
-        res *= (n - i);
-        res /= (i + 1);
-    }
+    long l1 = fact_map[n];
+    long l2 = (inv_map[k] * inv_map[n-k]) % MOD;
 
-    return res;
+    return (l1 * l2) % MOD;
 }
 
 int main() {
@@ -59,13 +70,24 @@ int main() {
 
     std::cin >> s >> q;
 
-    std::vector<BITree> treeMap;
+    std::vector<BITree> tree_map;
+
+    std::vector<long> fact_map(s.size()+1);
+    std::vector<long> inv_map(s.size()+1);
+
     for (int i = 0; i < 26; i++) {
-        treeMap.emplace_back(BITree(s.size()));
+        tree_map.emplace_back(BITree(s.size()));
     }
 
     for (int i = 0; i < s.size(); i++) {
-        treeMap[s[i]-'a'].update(i, 1);
+        tree_map[s[i]-'a'].update(i, 1);
+    }
+
+    fact_map[0] = 1;
+    inv_map[0] = 1;
+    for (int i = 1; i <= s.size(); i++) {
+        fact_map[i] = (i * fact_map[i-1]) % MOD;
+        inv_map[i] = mod_exp(fact_map[i], MOD-2) % MOD;
     }
 
     while (q--) {
@@ -76,7 +98,7 @@ int main() {
         long t = 0;
 
         for (int i = 0; i < 26; i++) {
-            auto cnt = treeMap[i].getSum(r-1) - (l > 1 ? treeMap[i].getSum(l-2) : 0);
+            auto cnt = tree_map[i].getSum(r-1) - (l > 1 ? tree_map[i].getSum(l-2) : 0);
 
             if (cnt == 1) {
                 t++;
@@ -97,7 +119,7 @@ int main() {
                 n /= 2;
                 acc += n;
 
-                result *= n_choose_k(acc, n);
+                result *= n_choose_k(acc, n, fact_map, inv_map);
                 result = result % MOD;
             }
         }
