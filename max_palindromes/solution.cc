@@ -2,38 +2,6 @@
 
 #define MOD 1000000007L
 
-class BITree {
-public:
-    explicit BITree(size_t n) : _n(n) {
-        _a.resize(n+1, 0);
-    }
-
-    void update(int index, long val) {
-        index = index + 1;
-
-        while (index <= _n) {
-            _a[index] += val;
-            index += index & (-index);
-        }
-    }
-
-    long getSum(int index) {
-        long sum = 0;
-        index = index + 1;
-
-        while (index>0) {
-            sum += _a[index];
-            index -= index & (-index);
-        }
-
-        return sum;
-    }
-
-private:
-    size_t _n;
-    std::vector<long> _a;
-};
-
 long mod_exp(long b, long e) {
     long r = 1;
 
@@ -70,17 +38,21 @@ int main() {
 
     std::cin >> s >> q;
 
-    std::vector<BITree> tree_map;
-
+    std::vector<std::vector<long>> freq_map;
     std::vector<long> fact_map(s.size()+1);
     std::vector<long> inv_map(s.size()+1);
 
     for (int i = 0; i < 26; i++) {
-        tree_map.emplace_back(BITree(s.size()));
+        freq_map.emplace_back(std::vector<long>(s.size(), 0));
     }
 
+    std::vector<long> acc_map(26, 0);
     for (int i = 0; i < s.size(); i++) {
-        tree_map[s[i]-'a'].update(i, 1);
+        acc_map[s[i]-'a']++;
+
+        for (int j = 0; j < 26; j++) {
+            freq_map[j][i] = acc_map[j];
+        }
     }
 
     fact_map[0] = 1;
@@ -98,7 +70,7 @@ int main() {
         long t = 0;
 
         for (int i = 0; i < 26; i++) {
-            auto cnt = tree_map[i].getSum(r-1) - (l > 1 ? tree_map[i].getSum(l-2) : 0);
+            auto cnt = freq_map[i][r-1] - (l > 1 ? freq_map[i][l-2] : 0);
 
             if (cnt == 1) {
                 t++;
