@@ -26,32 +26,39 @@ modExp b e m = go b e 1
           b' = (b * b) `mod` m
           e' = shift e (-1)
 
-initFreqMap :: C.ByteString -> Map.Map Char Int
-initFreqMap inp = go map inp
+initFreqMap :: C.ByteString -> Map.Map Char [Int]
+initFreqMap inp = go map1 map2 inp
   where
-    map = Map.fromList $ zip ['a'..'z'] [0..]
+    map1 = Map.fromList $ zip ['a'..'z'] [0..]
+    map2 = Map.fromList $ zip ['a'..'z'] $ repeat []
 
-    go m inp'
-      | C.null inp' = m
-      | otherwise    = go m' $ C.tail inp'
+    go m1 m2 inp'
+      | C.null inp' = m2
+      | otherwise    = go m1' m2' $ C.tail inp'
       where
-        w  = C.head inp
-        m' = Map.update (\v -> Just (v+1)) w m
+        w   = C.head inp
+        m1' = Map.update (\v -> Just (v+1)) w m1
+        m2' = Map.update (\v -> liftM (:v) $ Map.lookup w m1') w m2
 
-query :: Int -> Int -> Int -> Map.Map Char Int -> [Int] -> Int
+query :: Int -> Int -> Int -> Map.Map Char [Int] -> [Int] -> Int
 query l r m freqMap facts = undefined
   where
-    f1 acc 0 = acc
-    f1 acc 1 = acc + 1
-    f1 acc v
-      | even v    = 0
+    f1 acc cs
+      | even cnt  = 0
       | otherwise = acc + 1
-
-    f2 acc 0 = acc
-    f2 acc 1 = acc
-    f2 (acc1,acc2) v = (acc1+v',acc2)
       where
-        v' = v `div` 2
+        cl | l > 1     = cs !! (l-2)
+           | otherwise = 0
+
+        cr = cs !! (r-2)
+
+        cnt = cr - cl
+
+    --f2 acc 0 = acc
+    --f2 acc 1 = acc
+    --f2 (acc1,acc2) v = (acc1+v',acc2)
+    --  where
+    --    v' = v `div` 2
 
     choose n k = (f1 * t) `mod` m
       where
@@ -65,7 +72,7 @@ query l r m freqMap facts = undefined
 
 
     x = Map.foldl' f1 0 freqMap
-    (_, y) = Map.foldl' f2 (0,1) freqMap
+    --(_, y) = Map.foldl' f2 (0,1) freqMap
 
 
 main :: IO()
