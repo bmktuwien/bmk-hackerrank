@@ -10,7 +10,7 @@ import qualified Data.Map.Strict       as Map
 import qualified Data.IntMap.Strict    as IntMap
 import           Debug.Trace
 
-
+-- precompute factorials
 factorials :: Int -> Int -> IntMap.IntMap Int
 factorials n m = go 0 1 IntMap.empty
   where
@@ -36,6 +36,7 @@ modExp b e m = go b e 1
           b' = (b * b) `mod` m
           e' = shift e (-1)
 
+-- precompute frequency table
 initFreqMap :: C.ByteString -> Map.Map Char (IntMap.IntMap Int)
 initFreqMap inp = go 1 map1 map2 inp
   where
@@ -80,6 +81,7 @@ query l r m freqMap facts
         acc2' = (acc2 * r) `mod` m
 
 
+    -- calc binomial coefficient using Fermat's little theorem
     choose n k
       | n < k = 0
       | otherwise = (f1 * t) `mod` m

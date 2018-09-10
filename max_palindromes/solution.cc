@@ -23,10 +23,6 @@ long n_choose_k(int n, int k, const std::vector<long> &fact_map, const std::vect
         return 0;
     }
 
-    if (k > n - k) {
-        k = n - k;
-    }
-
     long l1 = fact_map[n];
     long l2 = (inv_map[k] * inv_map[n-k]) % MOD;
 
