@@ -68,30 +68,22 @@ int main() {
 
         std::cin >> l >> r;
         std::vector<long> x(26, 0);
+
         long t = 0;
+        long acc = 0;
+        long result = 1;
 
         for (int i = 0; i < 26; i++) {
             auto cnt = freq_map[i][r-1] - (l > 1 ? freq_map[i][l-2] : 0);
 
-            if (cnt == 1) {
+            if (cnt % 2 != 0) {
                 t++;
-            } else if (cnt > 1) {
-                if (cnt % 2 == 0) {
-                    x[i] = cnt;
-                } else {
-                    x[i] = cnt - 1;
-                    t++;
-                }
             }
-        }
 
-        long result = 1;
-        long acc = 0;
-        for (auto n : x) {
+            long n = cnt / 2;
+
             if (n > 0) {
-                n /= 2;
                 acc += n;
-
                 result *= n_choose_k(acc, n, fact_map, inv_map);
                 result = result % MOD;
             }
