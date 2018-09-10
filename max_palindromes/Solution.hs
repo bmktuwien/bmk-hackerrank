@@ -11,8 +11,8 @@ import qualified Data.IntMap.Strict    as IntMap
 import           Debug.Trace
 
 -- precompute factorials
-factorials :: Int -> Int -> IntMap.IntMap Int
-factorials n m = go 0 1 IntMap.empty
+compFactorials :: Int -> Int -> IntMap.IntMap Int
+compFactorials n m = go 0 1 IntMap.empty
   where
     go a acc map
       | a < 0     = map
@@ -22,6 +22,20 @@ factorials n m = go 0 1 IntMap.empty
         map' = IntMap.insert a acc map
         a'   = a + 1
         acc' = (acc * a') `mod` m
+
+-- precompute invs
+compInvs :: Int -> Int -> IntMap.IntMap Int -> IntMap.IntMap Int
+compInvs n m facts = go 0 IntMap.empty
+  where
+    go a map
+      | a < 0     = map
+      | a < n     = go a' map'
+      | otherwise = map'
+      where
+        map' = IntMap.insert a v map
+        a' = a + 1
+        v = (modExp b (m-2) m) `mod` m
+        b = (IntMap.!) facts a
 
 
 modExp :: Int -> Int -> Int -> Int
@@ -52,8 +66,9 @@ initFreqMap inp = go 1 map1 map2 inp
               Map.lookup w m1') w m) m2 ['a'..'z']
 
 
-query :: Int -> Int -> Int -> Map.Map Char (IntMap.IntMap Int) -> IntMap.IntMap Int -> Int
-query l r m freqMap facts
+query :: Int -> Int -> Int -> Map.Map Char (IntMap.IntMap Int)
+         -> IntMap.IntMap Int -> IntMap.IntMap Int -> Int
+query l r m freqMap facts invs
   | x > 1     = (x * y) `mod` m
   | otherwise = y
   where
@@ -87,11 +102,8 @@ query l r m freqMap facts
       | otherwise = (f1 * t) `mod` m
       where
         f1 = (IntMap.!) facts n
-        f2 = (IntMap.!) facts k
-        f3 = (IntMap.!) facts (n-k)
-
-        i1 = (modExp f2 (m-2) m) `mod` m
-        i2 = (modExp f3 (m-2) m) `mod` m
+        i1 = (IntMap.!) invs k
+        i2 = (IntMap.!) invs (n-k)
 
         t = (i1 * i2) `mod` m
 
@@ -106,7 +118,8 @@ main = do
     q   <- readLn :: IO Int
 
     let modulo  = 1000000007
-    let facts   = factorials (C.length inp) modulo
+    let facts   = compFactorials (C.length inp) modulo
+    let invs    = compInvs (C.length inp) modulo facts
     let freqMap = initFreqMap inp
 
     forM_ [1..q] $ \_ -> do
@@ -117,6 +130,6 @@ main = do
       let l = (read s1) :: Int
       let r = (read s2) :: Int
 
-      let result = query l r modulo freqMap facts
+      let result = query l r modulo freqMap facts invs
 
       putStrLn $ show result
