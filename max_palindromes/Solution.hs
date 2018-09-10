@@ -7,14 +7,22 @@ import qualified Data.ByteString.Char8 as C
 import           Data.Bits
 import           Data.List
 import qualified Data.Map.Strict       as Map
+import qualified Data.IntMap.Strict    as IntMap
 import           Debug.Trace
 
 
-factorials :: Int -> Int -> [Int]
-factorials 0 m = [1]
-factorials n m = (n * (head s) `mod` m) : s
+factorials :: Int -> Int -> IntMap.IntMap Int
+factorials n m = go 0 1 IntMap.empty
   where
-    s = factorials (n-1) m
+    go a acc map
+      | a < 0     = map
+      | a < n     = go a' acc' map'
+      | otherwise = map'
+      where
+        map' = IntMap.insert a acc map
+        a'   = a + 1
+        acc' = (acc * a') `mod` m
+
 
 modExp :: Int -> Int -> Int -> Int
 modExp b e m = go b e 1
@@ -28,31 +36,30 @@ modExp b e m = go b e 1
           b' = (b * b) `mod` m
           e' = shift e (-1)
 
-initFreqMap :: C.ByteString -> Map.Map Char [Int]
-initFreqMap inp = go map1 map2 inp
+initFreqMap :: C.ByteString -> Map.Map Char (IntMap.IntMap Int)
+initFreqMap inp = go 1 map1 map2 inp
   where
     map1 = Map.fromList $ zip ['a'..'z'] $ repeat 0
-    map2 = Map.fromList $ zip ['a'..'z'] $ repeat []
+    map2 = Map.fromList $ zip ['a'..'z'] $ repeat IntMap.empty
 
-    go m1 m2 inp
+    go idx m1 m2 inp
       | C.null inp = m2
-      | otherwise  = go m1' m2' $ C.tail inp
+      | otherwise  = go (idx+1) m1' m2' $ C.tail inp
       where
         m1' = Map.update (\v -> Just $ v+1) (C.head inp) m1
-        m2' = foldl' (\m w -> Map.update (\v -> liftM ((v ++) . (:[])) $ Map.lookup w m1') w m) m2 ['a'..'z']
+        m2' = foldl' (\m w -> Map.update (\v -> liftM (\c -> IntMap.insert idx c v) $
+              Map.lookup w m1') w m) m2 ['a'..'z']
 
 
-query :: Int -> Int -> Int -> Map.Map Char [Int] -> [Int] -> Int
+query :: Int -> Int -> Int -> Map.Map Char (IntMap.IntMap Int) -> IntMap.IntMap Int -> Int
 query l r m freqMap facts
   | x > 1     = (x * y) `mod` m
   | otherwise = y
   where
     calcCnt cs = cr - cl
       where
-         cl | l > 1     = cs !! (l-2)
-            | otherwise = 0
-
-         cr = cs !! (r-1)
+         cl = IntMap.findWithDefault 0 (l-1) cs
+         cr = IntMap.findWithDefault 0 r cs
 
     f1 acc cs
       | even cnt = acc
@@ -77,9 +84,9 @@ query l r m freqMap facts
       | n < k = 0
       | otherwise = (f1 * t) `mod` m
       where
-        f1 = facts !! n
-        f2 = facts !! k
-        f3 = facts !! (n-k)
+        f1 = (IntMap.!) facts n
+        f2 = (IntMap.!) facts k
+        f3 = (IntMap.!) facts (n-k)
 
         i1 = (modExp f2 (m-2) m) `mod` m
         i2 = (modExp f3 (m-2) m) `mod` m
@@ -97,7 +104,7 @@ main = do
     q   <- readLn :: IO Int
 
     let modulo  = 1000000007
-    let facts   = reverse $ factorials (C.length inp) modulo
+    let facts   = factorials (C.length inp) modulo
     let freqMap = initFreqMap inp
 
     forM_ [1..q] $ \_ -> do
