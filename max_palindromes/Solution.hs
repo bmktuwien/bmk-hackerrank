@@ -3,6 +3,8 @@
 module Main where
 
 import           Control.Monad
+import           Data.Array            (Array)
+import qualified Data.Array            as A
 import qualified Data.ByteString.Char8 as C
 import           Data.Bits
 import           Data.List
@@ -10,33 +12,18 @@ import qualified Data.Map.Strict       as Map
 import qualified Data.IntMap.Strict    as IntMap
 import           Debug.Trace
 
+
 -- precompute factorials
-compFactorials :: Int -> Int -> IntMap.IntMap Int
-compFactorials n m = go 0 1 IntMap.empty
+compFactorials :: Int -> Int -> Array Int Int
+compFactorials n m = A.listArray (0,n) $ scanl' f 1 [1..n]
   where
-    go a acc map
-      | a < 0     = map
-      | a < n     = go a' acc' map'
-      | otherwise = map'
-      where
-        map' = IntMap.insert a acc map
-        a'   = a + 1
-        acc' = (acc * a') `mod` m
+    f acc a = (acc * a) `mod` m
 
 -- precompute invs
-compInvs :: Int -> Int -> IntMap.IntMap Int -> IntMap.IntMap Int
-compInvs n m facts = go 0 IntMap.empty
+compInvs :: Int -> Int -> Array Int Int -> Array Int Int
+compInvs n m facts = A.listArray (0,n) $ map f [0..n]
   where
-    go a map
-      | a < 0     = map
-      | a < n     = go a' map'
-      | otherwise = map'
-      where
-        map' = IntMap.insert a v map
-        a' = a + 1
-        v = (modExp b (m-2) m) `mod` m
-        b = (IntMap.!) facts a
-
+    f a = (modExp ((A.!) facts a) (m-2) m) `mod` m
 
 modExp :: Int -> Int -> Int -> Int
 modExp b e m = go b e 1
@@ -51,31 +38,26 @@ modExp b e m = go b e 1
           e' = shift e (-1)
 
 -- precompute frequency table
-initFreqMap :: C.ByteString -> Map.Map Char (IntMap.IntMap Int)
-initFreqMap inp = go 1 map1 map2 inp
+initFreqMap :: C.ByteString -> Map.Map Char (Array Int Int)
+initFreqMap inp = Map.fromList $ map f ['a'..'z']
   where
-    map1 = Map.fromList $ zip ['a'..'z'] $ repeat 0
-    map2 = Map.fromList $ zip ['a'..'z'] $ repeat IntMap.empty
-
-    go idx m1 m2 inp
-      | C.null inp = m2
-      | otherwise  = go (idx+1) m1' m2' $ C.tail inp
+    n = C.length inp
+    f c = (c, A.listArray (0,n) $ scanl' g 0 [0..n-1])
       where
-        m1' = Map.update (\v -> Just $ v+1) (C.head inp) m1
-        m2' = foldl' (\m w -> Map.update (\v -> liftM (\c -> IntMap.insert idx c v) $
-              Map.lookup w m1') w m) m2 ['a'..'z']
+        g x j
+          | C.index inp j == c = x+1
+          | otherwise = x
 
-
-query :: Int -> Int -> Int -> Map.Map Char (IntMap.IntMap Int)
-         -> IntMap.IntMap Int -> IntMap.IntMap Int -> Int
+query :: Int -> Int -> Int -> Map.Map Char (Array Int Int)
+         -> Array Int Int -> Array Int Int -> Int
 query l r m freqMap facts invs
   | x > 1     = (x * y) `mod` m
   | otherwise = y
   where
-    calcCnt cs = cr - cl
+    calcCnt freqMap = cr - cl
       where
-         cl = IntMap.findWithDefault 0 (l-1) cs
-         cr = IntMap.findWithDefault 0 r cs
+         cl = (A.!) freqMap (l-1)
+         cr = (A.!) freqMap r
 
     f1 acc cs
       | even cnt = acc
@@ -101,9 +83,9 @@ query l r m freqMap facts invs
       | n < k = 0
       | otherwise = (f1 * t) `mod` m
       where
-        f1 = (IntMap.!) facts n
-        i1 = (IntMap.!) invs k
-        i2 = (IntMap.!) invs (n-k)
+        f1 = (A.!) facts n
+        i1 = (A.!) invs k
+        i2 = (A.!) invs (n-k)
 
         t = (i1 * i2) `mod` m
 
@@ -122,7 +104,7 @@ main = do
     let invs    = compInvs (C.length inp) modulo facts
     let freqMap = initFreqMap inp
 
-    forM_ [1..q] $ \_ -> do
+    replicateM_ q $ do
 
       line <- getLine
 
