@@ -29,3 +29,7 @@ add_executable(max_subarray_sum max_subarray_sum/solution.cc)
 ################################################################################
 
 add_executable(max_palindromes max_palindromes/solution.cc)
+
+################################################################################
+
+add_executable(sherlock_anagrams sherlock_anagrams/solution.cc)
