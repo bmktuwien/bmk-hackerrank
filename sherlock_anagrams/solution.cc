@@ -14,7 +14,7 @@ std::vector<int> calc_sig(int l, int r,
     return sig;
 }
 
-void count_anagrams(const std::string& inp) {
+long count_anagrams(const std::string& inp) {
     std::vector<std::vector<long>> freq_map;
 
     auto l = inp.length();
@@ -32,6 +32,8 @@ void count_anagrams(const std::string& inp) {
         }
     }
 
+    long result = 0;
+
     for (size_t w = 0; w < l-1; w++) {
         std::map<std::vector<int>, int> cnt_map;
 
@@ -40,13 +42,14 @@ void count_anagrams(const std::string& inp) {
             cnt_map[sig] += 1;
         }
 
-        std::cout << "[";
         for (const auto &p : cnt_map) {
-            std::cout << p.second << ", ";
+            if (p.second > 1) {
+                result += (p.second * (p.second-1)) / 2;
+            }
         }
-        std::cout << "]" << std::endl;
-
     }
+
+    return result;
 }
 
 int main() {
@@ -58,6 +61,7 @@ int main() {
         std::string s;
         std::cin >> s;
 
-        count_anagrams(s);
+        auto r = count_anagrams(s);
+        std::cout << r << std::endl;
     }
 }
