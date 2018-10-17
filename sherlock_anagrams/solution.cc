@@ -7,8 +7,7 @@ std::vector<int> calc_sig(int l, int r,
     std::vector<int> sig(26);
 
     for (int i = 0; i < 26; i++) {
-        auto cnt = freq_map[i][r] - (l > 0 ? freq_map[i][l-1] : 0);
-        sig[i] = cnt;
+        sig[i] = freq_map[i][r] - (l > 0 ? freq_map[i][l-1] : 0);
     }
 
     return sig;
