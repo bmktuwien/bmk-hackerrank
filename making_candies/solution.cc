@@ -15,6 +15,7 @@ int main() {
 
     while (c < n) {
         long x = c / p;
+        c = c % p;
 
         if (m < w) {
             long y =  (w-m < x ? w-m : x);
@@ -35,7 +36,7 @@ int main() {
             m++;
         }
 
-        c = m*w;
+        c += m*w;
 
         std::cout << "m=" << m << ", w=" << w << " c=" << c << std::endl;
         res++;
