@@ -33,3 +33,7 @@ add_executable(max_palindromes max_palindromes/solution.cc)
 ################################################################################
 
 add_executable(sherlock_anagrams sherlock_anagrams/solution.cc)
+
+################################################################################
+
+add_executable(min_max_riddle min_max_riddle/solution.cc)
