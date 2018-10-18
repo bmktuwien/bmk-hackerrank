@@ -27,6 +27,7 @@ int main() {
         }
 
         int q = 1;
+        visited[p.second] = true;
         // search right
         for (int i = p.second+1; i < n; i++) {
             if (v[i] < p.first) {
@@ -48,8 +49,9 @@ int main() {
         }
 
         while (x < q) {
-            std::cout << p.first << std::endl;
+            std::cout << p.first << " ";
             x++;
         }
     }
+    std::cout << std::endl;
 }
