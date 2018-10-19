@@ -3,43 +3,50 @@
 #include <map>
 
 
+uint64_t next_rate(uint64_t *m, uint64_t *w) {
+    if (*m < *w) {
+        (*m)++;
+    } else {
+        (*w)++;
+    }
+
+    return (*m)*(*w);
+}
 
 int main() {
-    long m, w, p, n;
+    uint64_t m, w, p, n;
 
     std::cin >> m >> w >> p >> n;
 
     // solve it
-    long c = m * w;
-    long res = 1;
+    uint64_t r = m * w;
 
-    while (c < n) {
-        long x = c / p;
-        c = c % p;
+    std::cout << r << std::endl;
 
-        if (m < w) {
-            long y =  (w-m < x ? w-m : x);
-            m += y;
-            x -= y;
+    uint64_t res = 1 + (n-1)/r;
+
+    uint64_t c = r;
+    uint64_t k = 1;
+
+    while (res > 1) {
+        if (c < p) {
+            uint64_t t = (p-c+r-1)/r;
+            c += (r*t);
+            k += t;
         }
 
-        if (w < m) {
-            long y =  (m-w < x ? m-w : x);
-            w += y;
-            x -= y;
+        r = next_rate(&m,&w);
+        c -= p;
+
+        uint64_t res1 = k + (n-c+r-1)/r;
+
+        std::cout << "r=" << r << " c=" << c << " k=" << k << " res=" << res << " res1=" << res1 << std::endl;
+
+        if (res1 <= res) {
+            res = res1;
+        } else {
+            break;
         }
-
-        m += (x/2);
-        w += (x/2);
-
-        if (x % 2 == 1) {
-            m++;
-        }
-
-        c += m*w;
-
-        std::cout << "m=" << m << ", w=" << w << " c=" << c << std::endl;
-        res++;
     }
 
     std::cout << res << std::endl;
