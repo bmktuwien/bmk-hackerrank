@@ -35,6 +35,12 @@ int main() {
     // solve it
     uint64_t r = m * w;
 
+    if (m != 0 && r / m != w) {
+        // overflow handling
+        std::cout << 1 << std::endl;
+        return 0;
+    }
+
     uint64_t res = 1 + (n-1)/r;
     uint64_t c = r;
     uint64_t k = 1;
