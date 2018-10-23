@@ -4,7 +4,8 @@
 #include <map>
 #include <set>
 
-using FreqMap = std::vector<std::vector<long>>;
+using FreqMap = std::vector<std::vector<int>>;
+using DPCache = std::vector<std::vector<int>>;
 
 FreqMap calc_freq(const std::string& inp) {
     FreqMap freq_map(26);
@@ -16,17 +17,49 @@ FreqMap calc_freq(const std::string& inp) {
     return freq_map;
 }
 
-int next_pos(char c, int pos, const FreqMap& freq_map) {
+int prev_pos(char c, int pos, const FreqMap& freq_map) {
     auto &v = freq_map[c-'A'];
-    auto it = std::lower_bound(v.begin(), v.end(), pos+1);
+    auto it = std::upper_bound(v.begin(), v.end(), pos+1);
 
-    if (it != v.end()) {
-        return *it;
-    } else {
+    if (it == v.begin()) {
         return -1;
+    } else {
+        it--;
+        return *(it);
     }
 }
 
+int solve(int i, int j, const std::string& s1, const std::string& s2,
+          const FreqMap& freq_map1, const FreqMap& freq_map2,
+          DPCache& dp_cache) {
+
+    if (i < 0 || j < 0) {
+        return 0;
+    }
+
+    if (dp_cache[i][j] != -1) {
+        return dp_cache[i][j];
+    }
+
+    auto x1 = prev_pos(s1[i], j, freq_map2);
+    int p1 = -1;
+    if (x1 != -1) {
+        p1 = solve(i-1, x1-1, s1, s2, freq_map1, freq_map2, dp_cache) + 1;
+    }
+
+    auto x2 = prev_pos(s2[j], i, freq_map1);
+    int p2 = -1;
+    if (x2 != -1) {
+        p2 = solve(x2-1, j-1, s1, s2, freq_map1, freq_map2, dp_cache) + 1;
+    }
+
+    int p3 = solve(i-1, j, s1, s2, freq_map1, freq_map2, dp_cache);
+    int p4 = solve(i, j-1, s1, s2, freq_map1, freq_map2, dp_cache);
+
+    dp_cache[i][j] = std::max({p1,p2,p3,p4});
+
+    return dp_cache[i][j];
+}
 
 int main() {
     std::string s1;
@@ -34,37 +67,11 @@ int main() {
 
     std::cin >> s1 >> s2;
 
-    auto freq_map = calc_freq(s1);
+    DPCache dp_cache(s1.size(), std::vector<int>(s1.size(),-1));
+    FreqMap freq_map1 = calc_freq(s1);
+    FreqMap freq_map2 = calc_freq(s2);
 
-    std::set<std::pair<int,int>> s;
-    s.insert(std::make_pair(0,-1));
+    int res = solve(s1.size()-1, s2.size()-1, s1, s2, freq_map1, freq_map2, dp_cache);
 
-
-    int res = 0;
-
-    for (int i = 0; i < s2.size(); i++) {
-        std::vector<std::pair<int,int>> v;
-
-        for (const auto& p : s) {
-            int q = next_pos(s2[i], p.second, freq_map);
-            if (q != -1) {
-                int r = p.first+1;
-                v.push_back(std::make_pair(r,q));
-
-                if (r > res) {
-                    res = r;
-                }
-            }
-        }
-
-        for (const auto& p : v) {
-            s.insert(p);
-        }
-    }
-
-    /*for (int j = 0; j < dp_map1.size(); j++) {
-        std::cout << "[" << dp_map1[j] << "," << dp_map2[j] << "] ";
-    }
-    std::cout << std::endl;*/
     std::cout << res << std::endl;
 }
