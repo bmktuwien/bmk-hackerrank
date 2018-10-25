@@ -208,6 +208,23 @@ public:
         }
     }
 
+   int search(const std::string &key) {
+        auto n = _root;
+
+        for (int i = 0; i < key.length(); i++) {
+            int index = key[i] - 'a';
+
+            if (n->children[index] == nullptr) {
+                return 0;
+            }
+
+
+            n = n->children[index];
+        }
+
+        return n != nullptr ? n->children_cnt : 0;
+    }
+
 private:
     struct Node {
         Node *children[ALPHABET_SIZE];
