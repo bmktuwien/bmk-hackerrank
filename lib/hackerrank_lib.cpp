@@ -206,6 +206,8 @@ public:
             n->children_cnt++;
             n = n->children[index];
         }
+
+        n->end_word = true;
     }
 
    int search(const std::string &key) {
@@ -222,12 +224,21 @@ public:
             n = n->children[index];
         }
 
-        return n != nullptr ? n->children_cnt : 0;
+        int cnt = 0;
+        if (n != nullptr) {
+            cnt = n->children_cnt;
+            if (n->end_word) {
+                cnt++;
+            }
+        }
+
+        return cnt;
     }
 
 private:
     struct Node {
         Node *children[ALPHABET_SIZE];
+        bool end_word{false};
         int children_cnt{0};
     };
 
@@ -236,7 +247,7 @@ private:
     Node *newNode() {
         auto n = new Node;
 
-        for (int i = 0; i < ALPHABET_SIZE; n++) {
+        for (int i = 0; i < ALPHABET_SIZE; i++) {
             n->children[i] = nullptr;
         }
 
