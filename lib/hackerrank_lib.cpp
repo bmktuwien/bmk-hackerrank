@@ -179,6 +179,56 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Trie
+
+class Trie {
+    const static int ALPHABET_SIZE = 26;
+
+public:
+    Trie() {
+        _root = newNode();
+    }
+
+    Trie(const Trie&) = delete;
+
+    Trie &operator=(const Trie&) = delete;
+
+    void insert(const std::string &key) {
+        auto n = _root;
+
+        for (int i = 0; i < key.length(); i++) {
+            int index = key[i] - 'a';
+
+            if (n->children[index] == nullptr) {
+                n->children[index] = newNode();
+            }
+
+            n->children_cnt++;
+            n = n->children[index];
+        }
+    }
+
+private:
+    struct Node {
+        Node *children[ALPHABET_SIZE];
+        int children_cnt{0};
+    };
+
+    Node *_root{nullptr};
+
+    Node *newNode() {
+        auto n = new Node;
+
+        for (int i = 0; i < ALPHABET_SIZE; n++) {
+            n->children[i] = nullptr;
+        }
+
+        return n;
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 // ATTENTION: input array must be sorted!
 long sum_diff_of_pairs(const std::vector<int>& a) {
     long sum = 0;
