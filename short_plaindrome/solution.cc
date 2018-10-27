@@ -32,15 +32,27 @@ long calc(const std::vector<int> &v1, const std::vector<int> &v2) {
         return 0;
     }
 
-    std::vector<int> ls;
-    std::vector<int> us;
+    std::vector<int> ls(v1.size());
+    std::vector<int> us(v1.size());
 
+    int c1 = 0;
+    int j1 = 0;
     for (int i = 0; i < v1.size(); i++) {
-        auto it1 = std::lower_bound(v2.begin(), v2.end(), v1[i]);
-        ls.push_back(std::distance(v2.begin(), it1));
+        while (j1 < v2.size() && v2[j1] < v1[i]) {
+            c1++;
+            j1++;
+        }
+        ls[i] = c1;
+    }
 
-        auto it2 = std::upper_bound(v2.begin(), v2.end(), v1[i]);
-        us.push_back(std::distance(it2, v2.end()));
+    int c2 = 0;
+    int j2 = v2.size() - 1;
+    for (int i = v1.size()-1; i >= 0; i--) {
+        while (j2 >= 0 && v2[j2] > v1[i]) {
+            c2++;
+            j2--;
+        }
+        us[i] = c2;
     }
 
     long s = 0;
