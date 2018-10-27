@@ -6,43 +6,20 @@
 
 const long M = 1000000007;
 
-long n_choose_k(int n, int k) {
-    if (n < k) {
+long calc0(const std::vector<int> &v) {
+    long res = 0;
+
+    if (v.empty()) {
         return 0;
     }
 
-    long res = 1;
+    long s = 0;
+    for (int i = 1; i < v.size(); i++) {
+        long t = v.size()-i-1;
+        s += i-1;
 
-    if (k > n - k) {
-        k = n - k;
-    }
-
-    for (int i = 0; i < k; ++i) {
-        res *= (n - i);
-        res /= (i + 1);
-    }
-
-    //std::cout << "n=" << n << std::endl;
-    return res;
-}
-
-long calc_stupid(const std::vector<int> &v1, const std::vector<int> &v2) {
-    long res = 0;
-
-    for (int i = 0; i < v1.size(); i++) {
-        for (int j = i+1; j < v1.size(); j++) {
-            int c = 0;
-            for (int k = 0; k < v2.size(); k++) {
-                if (v2[k] > v1[i] && v2[k] < v1[j]) {
-                    c++;
-                }
-            }
-
-            if (c > 1) {
-                res += ((c*(c-1))/2);
-                res %= M;
-            }
-        }
+        res += (s*t);
+        res %= M;
     }
 
     return res;
@@ -90,7 +67,7 @@ int main() {
 
     long res = 0;
     for (int i = 0; i < 26; i++) {
-        res += n_choose_k(indexes[i].size(), 4);
+        res += calc0(indexes[i]);
 
         for (int j = i+1; j < 26; j++) {
             res += calc(indexes[i], indexes[j]);
