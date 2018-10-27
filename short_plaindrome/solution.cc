@@ -5,7 +5,20 @@
 #include <set>
 
 
-long calc_stupid(const std::vector<int> &v1, const std::vector<int> &v2) {
+long calc_stupid(const std::vector<int> &v) {
+    long res = 0;
+
+    for (int i = 0; i < v.size(); i++) {
+        for (int j = i+3; j < v.size(); j++) {
+            int c = j-i-1;
+            res += ((c*(c-1))/2);
+        }
+    }
+
+    return res;
+}
+
+long calc_stupid2(const std::vector<int> &v1, const std::vector<int> &v2) {
     long res = 0;
 
     for (int i = 0; i < v1.size(); i++) {
@@ -37,10 +50,11 @@ int main() {
 
     long res = 0;
     for (int i = 0; i < 26; i++) {
-        for (int j = i+1; j < 26; j++) {
+        res += calc_stupid(indexes[i]);
 
-            res += calc_stupid(indexes[i], indexes[j]);
-            res += calc_stupid(indexes[j], indexes[i]);
+        for (int j = i+1; j < 26; j++) {
+            res += calc_stupid2(indexes[i], indexes[j]);
+            res += calc_stupid2(indexes[j], indexes[i]);
         }
     }
 
