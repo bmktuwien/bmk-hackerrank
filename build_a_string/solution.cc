@@ -22,16 +22,16 @@ long build(int a, int b, std::string& s) {
             q++;
         }
 
-        //std::cout << "built=" << s2 << " rest=" << s << " fouund=" << found << std::endl;
+        std::cout << "built=" << s2 << " rest=" << s << " fouund=" << found << std::endl;
 
         if (!found) {
-            //std::cout << "appending: " << s[0] << std::endl;
+            std::cout << "appending: " << s[0] << std::endl;
             s2.push_back(s[0]);
             s.erase(0, 1);
 
             res += a;
         } else {
-            //std::cout << "copying: " << s.substr(0,q-1) << std::endl;
+            std::cout << "copying: " << s.substr(0,q-1) << std::endl;
             s2.append(s, 0, q-1);
             s.erase(0, q-1);
 
