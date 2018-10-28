@@ -60,10 +60,12 @@ long build(int a, int b, std::string& s) {
 long build_brute(int a, int b, std::string s1, std::string s2) {
     long res = 0;
 
+
     if (s2.empty()) {
         return 0;
     }
 
+    std::cout << "s1=" << s1 << " s2=" << s2 << std::endl;
     res = a + build_brute(a, b, s1+s2[0], s2.substr(1));
 
     int q = 1;
