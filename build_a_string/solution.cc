@@ -14,15 +14,26 @@ long build(int a, int b, std::string& s) {
     s.erase(0, c);
 
     while (!s.empty()) {
-        auto p = s2.find(s, c);
-        if (p == std::string::npos) {
+        int q = c;
+        bool found = false;
+
+        while (s2.find(s.c_str(), 0, q) != std::string::npos) {
+            found = true;
+            q++;
+        }
+
+        //std::cout << "built=" << s2 << " rest=" << s << " fouund=" << found << std::endl;
+
+        if (!found) {
+            //std::cout << "appending: " << s[0] << std::endl;
             s2.push_back(s[0]);
             s.erase(0, 1);
 
             res += a;
         } else {
-            s2.append(s, c);
-            s.erase(0, c);
+            //std::cout << "copying: " << s.substr(0,q-1) << std::endl;
+            s2.append(s, 0, q-1);
+            s.erase(0, q-1);
 
             res += b;
         }
