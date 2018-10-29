@@ -19,20 +19,30 @@ long build_brute(int a, int b, const std::string& s, int i, std::vector<long>& c
 
     res = std::min(a,b) + build_brute(a, b, s, i+1, cache);
 
-    auto s1 = s.substr(0,i);
+    int q = 0;
+    for (int k = 0; k < i; k++) {
+        int t = 0;
+        int r = k;
 
-    int q = 2;
-    while (s1.find(s.c_str()+i, 0, q) != std::string::npos) {
-        q++;
+        while ((r < i) && ((i+t) < s.size()) && (s[i+t] == s[r])) {
+            r++;
+            t++;
+        }
+
+        if (t > q) {
+            q = t;
+        }
     }
+    //std::cout << "q=" << q << "i=" << i << std::endl;
 
-    long r = b + build_brute(a, b, s, i+q-1, cache);
-    if (r < res) {
-        res = r;
+    if (q > 1) {
+        long r = b + build_brute(a, b, s, i+q, cache);
+        if (r < res) {
+            res = r;
+        }
     }
 
     cache[i] = res;
-
 
     return res;
 }
