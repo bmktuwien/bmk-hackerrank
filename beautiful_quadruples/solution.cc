@@ -12,6 +12,7 @@ void brute_force_debug(int a, int b, int c, int d) {
     std::map<int,int> m;
     int res = 0;
 
+    int t = 0;
     for (int a = 1; a <= v[0]; a++) {
         for (int b = a; b <= v[1]; b++) {
             for (int c = b; c <= v[2]; c++) {
@@ -21,6 +22,8 @@ void brute_force_debug(int a, int b, int c, int d) {
                     if ((a^b^c^d) != 0) {
                         res++;
                     }
+
+                    t++;
                 }
             }
         }
@@ -31,6 +34,7 @@ void brute_force_debug(int a, int b, int c, int d) {
     }
 
     std::cout << res << std::endl;
+    std::cout << "total: "<< t << std::endl;
 }
 
 int main() {
@@ -41,24 +45,33 @@ int main() {
     std::vector<int> v({a,b,c,d});
     std::sort(v.begin(), v.end());
 
-    long total_cnt = 0;
+    std::vector<std::vector<int>> M(10000, std::vector<int>());
+
     int z = 0;
 
-    for (int a = 1; a <= v[0]; a++) {
-        for (int b = a; b <= v[1]; b++) {
-            for (int c = b; c <= v[2]; c++) {
-                int x = a^b^c;
-
-                if (x >= c && x <= v[3]) {
-                    z++;
-                }
-
-                total_cnt += (v[3]-c+1);
-            }
+    for (int a = 1; a <= v[2]; a++) {
+        for (int b = a; b <= v[3]; b++) {
+            int x = a ^ b;
+            M[x].push_back(a);
         }
     }
 
-    std::cout << (total_cnt - z) << std::endl;
+    long total = 0;
+    for (int a = 1; a <= v[0]; a++) {
+        for (int b = a; b <= v[1]; b++) {
+            int x = a ^ b;
+            auto it = std::lower_bound(M[x].begin(), M[x].end(), b);
+            z += std::distance(it, M[x].end());
+
+            int q = v[3] - v[2] + 1;
+            int r = v[3] - b + 1;
+            int n = v[2] - b + 1;
+
+            total += (((q+r)*n)/2);
+        }
+    }
+
+    std::cout << (total - z) << std::endl;
 
     //brute_force_debug(a,b,c,d);
 }
