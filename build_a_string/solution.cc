@@ -6,7 +6,7 @@
 #include <random>
 
 
-long build_brute(int a, int b, const std::string& s, int i, std::vector<long>& cache) {
+long build_brute(int a, int b, const std::string& s, int i, std::vector<long>& cache, const std::vector<int> &qs) {
     long res = 0;
 
     if (i >= s.size()) {
@@ -17,26 +17,10 @@ long build_brute(int a, int b, const std::string& s, int i, std::vector<long>& c
         return cache[i];
     }
 
-    res = std::min(a,b) + build_brute(a, b, s, i+1, cache);
+    res = std::min(a,b) + build_brute(a, b, s, i+1, cache, qs);
 
-    int q = 0;
-    for (int k = 0; k < i; k++) {
-        int t = 0;
-        int r = k;
-
-        while ((r < i) && ((i+t) < s.size()) && (s[i+t] == s[r])) {
-            r++;
-            t++;
-        }
-
-        if (t > q) {
-            q = t;
-        }
-    }
-    //std::cout << "q=" << q << "i=" << i << std::endl;
-
-    if (q > 1) {
-        long r = b + build_brute(a, b, s, i+q, cache);
+    if (qs[i] > 1) {
+        long r = b + build_brute(a, b, s, i+qs[i], cache, qs);
         if (r < res) {
             res = r;
         }
@@ -57,8 +41,43 @@ int main() {
         std::string input;
         std::cin >> input;
 
-        std::vector<long> cache(input.size(),-1);
+        std::vector<std::vector<int>> indexes(26);
+        for (int i = 0; i < input.size(); i++) {
+            indexes[input[i]-'a'].push_back(i);
+        }
 
-        std::cout << build_brute(a,b,input,0,cache) << std::endl;
+        std::vector<int> qs(input.size());
+
+        std::vector<int> v(input.size());
+        for (int i = input.size()-1; i > 0; i--) {
+            std::vector<int> v2(input.size());
+            int q = 0;
+
+            for (auto j : indexes[input[i]-'a']) {
+                if (j >= i) {
+                    break;
+                }
+
+                if ((j > 0) && (input[j-1] == input[i-1])) {
+                    int l = std::min(i-j-1, v[j]+1);
+                    v2[j-1] = l;
+
+                    if (l > q) {
+                        q = l;
+                    }
+                }
+
+
+                if (q < v[j]+1) {
+                    q = v[j]+1;
+                }
+            }
+
+            qs[i] = q;
+            v = std::move(v2);
+        }
+
+        std::vector<long> cache(input.size(),-1);
+        std::cout << build_brute(a,b,input,0,cache,qs) << std::endl;
     }
 }
