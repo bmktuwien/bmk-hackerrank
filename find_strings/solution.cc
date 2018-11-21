@@ -48,11 +48,8 @@ void solve(const std::string& input, int k, const std::vector<int>& sa, const st
         int m = input.size() - sa[i] - 1;
         int p = m - lcp[i] + 1;
 
-        //std::cout << "p=" << p << " m=" << m << " lcp=" << lcp[i] <<  std::endl;
-
         if (cnt + p >= k) {
-            auto suffix{input.substr(sa[i])};
-            std::cout << suffix.substr(0,lcp[i]+k-cnt) << std::endl;
+            std::cout << input.substr(sa[i],lcp[i]+k-cnt) << std::endl;
             return;
         }
 
