@@ -41,21 +41,31 @@ std::vector<int> calc_lcp_stupid(const std::string& s, const std::vector<int>& s
     return res;
 }
 
-void solve(const std::string& input, const std::vector<int>& sa, const std::vector<int> &lcp) {
-    for (size_t i = 0; i < sa.size(); i++) {
-        auto suffix{input.substr(sa[i])};
-        auto p = lcp[i];
+void solve(const std::string& input, int k, const std::vector<int>& sa, const std::vector<int> &lcp) {
+    int cnt = 0;
 
-        for (int j = p; j < suffix.size(); j++) {
-            std::cout << suffix.substr(0,j+1) << std::endl;
+    for (size_t i = 0; i < sa.size(); i++) {
+        int m = input.size() - sa[i] - 1;
+        int p = m - lcp[i] + 1;
+
+        //std::cout << "p=" << p << " m=" << m << " lcp=" << lcp[i] <<  std::endl;
+
+        if (cnt + p >= k) {
+            auto suffix{input.substr(sa[i])};
+            std::cout << suffix.substr(0,lcp[i]+k-cnt) << std::endl;
+            return;
         }
+
+        cnt += p;
     }
 }
 
 int main() {
     std::string inp;
+    int k;
 
     std::cin >> inp;
+    std::cin >> k;
 
     auto sa = calc_sa_stupid(inp);
     auto lcp = calc_lcp_stupid(inp, sa);
@@ -72,5 +82,5 @@ int main() {
     }
     std::cout << std::endl;
 
-    solve(inp, sa, lcp);
+    solve(inp, k, sa, lcp);
 }
