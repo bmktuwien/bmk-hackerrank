@@ -20,7 +20,7 @@ std::vector<int> calc_sa_stupid(const std::string& s) {
 }
 
 std::vector<int> calc_lcp_stupid(const std::string& s, const std::vector<int>& sa) {
-    std::vector<int> res;
+    std::vector<int> res{0};
 
     for (int i = 0; i < sa.size()-1; i++) {
         auto s1{s.substr(sa[i])};
@@ -39,6 +39,17 @@ std::vector<int> calc_lcp_stupid(const std::string& s, const std::vector<int>& s
     }
 
     return res;
+}
+
+void solve(const std::string& input, const std::vector<int>& sa, const std::vector<int> &lcp) {
+    for (size_t i = 0; i < sa.size(); i++) {
+        auto suffix{input.substr(sa[i])};
+        auto p = lcp[i];
+
+        for (int j = p; j < suffix.size(); j++) {
+            std::cout << suffix.substr(0,j+1) << std::endl;
+        }
+    }
 }
 
 int main() {
@@ -60,4 +71,6 @@ int main() {
         std::cout << i << ", ";
     }
     std::cout << std::endl;
+
+    solve(inp, sa, lcp);
 }
