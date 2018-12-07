@@ -1,22 +1,59 @@
 #include <algorithm>
 #include <iostream>
 #include <vector>
+#include <map>
 
-std::vector<int> calc_sa_stupid(const std::string& s) {
-    std::vector<std::pair<std::string,int>> v;
+std::vector<std::pair<int,int>> calc_sa_stupid(const std::vector<std::string>& ss) {
+    std::vector<std::pair<std::string,std::pair<int,int>>> v;
 
-    for (size_t i = 0; i < s.length(); i++) {
-        v.push_back(std::make_pair(s.substr(i), i));
+    for (size_t j = 0; j < ss.size(); j++) {
+        for (size_t i = 0; i < ss[j].length(); i++) {
+            v.push_back(std::make_pair(ss[j].substr(i), std::make_pair(j,i)));
+        }
     }
+
 
     std::sort(v.begin(), v.end());
 
-    std::vector<int> res;
+    std::vector<std::pair<int,int>> res;
     for (auto &p : v) {
         res.push_back(p.second);
     }
 
     return res;
+}
+
+void calc_sa(const std::vector<std::string>& ss) {
+    std::vector<std::vector<std::pair<int,int>>> tmp(26);
+    size_t n = 0;
+    for (size_t i = 0; i < ss.size(); i++) {
+        if (ss[i].length() > n) {
+            n = ss[i].length();
+        }
+
+        for (size_t j = 0; j < ss[i].length(); j++) {
+            tmp[ss[i][j] - 'a'].push_back(std::make_pair(i,j));
+        }
+    }
+
+    // initialize pos
+    std::vector<std::pair<int,int>> pos;
+    for (auto &v1 : tmp) {
+        for (auto &p: v1) {
+            pos.push_back(p);
+        }
+    }
+
+    // initialze inv_pos
+    std::map<std::pair<int,int>,int> inv_pos;
+    for (size_t i = 0; i < pos.size(); i++) {
+        inv_pos[pos[i]] = i;
+    }
+
+    int stage = 1;
+    while (stage <= n) {
+        //TODO implement me
+    }
 }
 
 std::vector<int> calc_lcp_stupid(const std::string& s, const std::vector<int>& sa) {
@@ -64,8 +101,8 @@ int main() {
     std::cin >> inp;
     std::cin >> k;
 
-    auto sa = calc_sa_stupid(inp);
-    auto lcp = calc_lcp_stupid(inp, sa);
+    //auto sa = calc_sa_stupid(inp);
+    /*auto lcp = calc_lcp_stupid(inp, sa);
 
     std::cout << "sa: ";
     for (auto i : sa) {
@@ -79,5 +116,5 @@ int main() {
     }
     std::cout << std::endl;
 
-    solve(inp, k, sa, lcp);
+    solve(inp, k, sa, lcp);*/
 }
