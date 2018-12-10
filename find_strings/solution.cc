@@ -38,9 +38,13 @@ void calc_sa(const std::vector<std::string>& ss) {
 
     // initialize pos
     std::vector<std::pair<int,int>> pos;
+    std::vector<bool> bh;
     for (auto &v1 : tmp) {
+        bool b = true;
         for (auto &p: v1) {
             pos.push_back(p);
+            bh.push_back(b);
+            b = false;
         }
     }
 
@@ -50,9 +54,58 @@ void calc_sa(const std::vector<std::string>& ss) {
         inv_pos[pos[i]] = i;
     }
 
-    int stage = 1;
-    while (stage <= n) {
-        //TODO implement me
+    int H = 1;
+
+    while (H <= n) {
+        std::vector<int> count(pos.size(), 0);
+        std::vector<bool> b2h(pos.size(), false);
+
+        for (size_t i = 0, j = 0; i < pos.size(); i++) {
+            if (bh[i]) {
+                j = i;
+            }
+            inv_pos[pos[i]] = j;
+        }
+
+        int k = 0;
+        int i = 0;
+
+        while (i < pos.size()) {
+            int j = k;
+            i = j;
+
+            do {
+                auto t = std::make_pair(pos[i].first, pos[i].second - H);
+                if (t.second >= 0) {
+                    count[inv_pos[t]]++;
+                    inv_pos[t] += count[inv_pos[t]] - 1;
+                    b2h[inv_pos[t]] = true;
+                }
+
+                i++;
+            } while (!bh[i]);
+
+            k = i;
+            i = j;
+
+            do {
+                auto t = std::make_pair(pos[i].first, pos[i].second - H);
+                int q = inv_pos[t];
+
+                if (b2h[q+1] && (j <= q) && (q < k) && (j <= (q+1)) && ((q+1) < k)) {
+                    b2h[q+1] = false;
+                }
+
+                i++;
+            } while (i < k);
+        }
+
+        bh = b2h;
+        for (auto &x : inv_pos) {
+            pos[x.second] = x.first;
+        }
+
+        H *= 2;
     }
 }
 
