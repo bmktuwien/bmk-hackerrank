@@ -56,7 +56,7 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
 
     int H = 1;
 
-    while (H <= n) {
+    while (H <= 2*n) {
         std::cout << "stage: " << H << std::endl;
 
         std::cout << "pos: ";
@@ -66,7 +66,7 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
         std::cout << std::endl;
 
         std::vector<int> count(pos.size(), 0);
-        std::vector<bool> b2h(pos.size(), false);
+        std::vector<bool> b2h(bh);
 
         for (size_t i = 0, j = 0; i < pos.size(); i++) {
             if (bh[i]) {
@@ -96,11 +96,9 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
 
                     count[q] += 1;
                     inv_pos[t] += (count[q] - 1);
-                    std::cout << "inv_pos[t]: " << inv_pos[t] << std::endl;
                     b2h[inv_pos[t]] = true;
                 }
 
-                std::cout << "i: " << i << " t.second=" << t.second << std::endl;
                 i++;
             } while (i < pos.size() && !bh[i]);
 
@@ -121,6 +119,7 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
 
                     if ((j <= q) && (q < k) && (j <= (q+1)) &&
                         ((q+1) < k) && b2h[q+1]) {
+                        std::cout << "fuck: " << "(" << t.first << "," << t.second << ")" << std::endl;
                         b2h[q+1] = false;
                     }
                 }
