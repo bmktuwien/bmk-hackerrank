@@ -23,7 +23,7 @@ std::vector<std::pair<int,int>> calc_sa_stupid(const std::vector<std::string>& s
     return res;
 }
 
-void calc_sa(const std::vector<std::string>& ss) {
+std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
     std::vector<std::vector<std::pair<int,int>>> tmp(26);
     size_t n = 0;
     for (size_t i = 0; i < ss.size(); i++) {
@@ -57,6 +57,14 @@ void calc_sa(const std::vector<std::string>& ss) {
     int H = 1;
 
     while (H <= n) {
+        std::cout << "stage: " << H << std::endl;
+
+        std::cout << "pos: ";
+        for (size_t i = 0; i < pos.size(); i++) {
+            std::cout << "(" << pos[i].first << "," << pos[i].second << "," << bh[i] << ")  ";
+        }
+        std::cout << std::endl;
+
         std::vector<int> count(pos.size(), 0);
         std::vector<bool> b2h(pos.size(), false);
 
@@ -66,6 +74,12 @@ void calc_sa(const std::vector<std::string>& ss) {
             }
             inv_pos[pos[i]] = j;
         }
+
+        std::cout << "inv_pos: ";
+        for (auto &x : inv_pos) {
+            std::cout << "(" << x.first.first << "," << x.first.second << "->" << x.second << ")  ";
+        }
+        std::cout << std::endl;
 
         int k = 0;
         int i = 0;
@@ -77,23 +91,27 @@ void calc_sa(const std::vector<std::string>& ss) {
             do {
                 auto t = std::make_pair(pos[i].first, pos[i].second - H);
                 if (t.second >= 0) {
-                    count[inv_pos[t]]++;
+                    count[inv_pos[t]] += 1;
                     inv_pos[t] += count[inv_pos[t]] - 1;
+                    std::cout << "inv_pos[t]: " << inv_pos[t] << std::endl;
                     b2h[inv_pos[t]] = true;
                 }
 
                 i++;
-            } while (!bh[i]);
+            } while (i < pos.size() && !bh[i]);
 
             k = i;
             i = j;
 
             do {
                 auto t = std::make_pair(pos[i].first, pos[i].second - H);
-                int q = inv_pos[t];
 
-                if (b2h[q+1] && (j <= q) && (q < k) && (j <= (q+1)) && ((q+1) < k)) {
-                    b2h[q+1] = false;
+                if (t.second >= 0) {
+                    int q = inv_pos[t];
+
+                    if (b2h[q+1] && (j <= q) && (q < k) && (j <= (q+1)) && ((q+1) < k)) {
+                        b2h[q+1] = false;
+                    }
                 }
 
                 i++;
@@ -107,6 +125,8 @@ void calc_sa(const std::vector<std::string>& ss) {
 
         H *= 2;
     }
+
+    return pos;
 }
 
 std::vector<int> calc_lcp_stupid(const std::string& s, const std::vector<int>& sa) {
@@ -148,11 +168,22 @@ void solve(const std::string& input, int k, const std::vector<int>& sa, const st
 }
 
 int main() {
-    std::string inp;
-    int k;
+    std::vector<std::string> inp;
+    int n, k;
 
-    std::cin >> inp;
-    std::cin >> k;
+    std::cin >> n;
+
+    while (n--) {
+        std::string s;
+        std::cin >> s;
+        inp.push_back(s);
+    }
+
+    auto sa = calc_sa(inp);
+    for (auto &p : sa) {
+        std::cout << "(" << p.first << "," << p.second << ")  ";
+    }
+    std::cout << std::endl;
 
     //auto sa = calc_sa_stupid(inp);
     /*auto lcp = calc_lcp_stupid(inp, sa);
