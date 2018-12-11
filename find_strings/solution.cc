@@ -90,15 +90,25 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
 
             do {
                 auto t = std::make_pair(pos[i].first, pos[i].second - H);
+
                 if (t.second >= 0) {
-                    count[inv_pos[t]] += 1;
-                    inv_pos[t] += count[inv_pos[t]] - 1;
+                    int q = inv_pos[t];
+
+                    count[q] += 1;
+                    inv_pos[t] += (count[q] - 1);
                     std::cout << "inv_pos[t]: " << inv_pos[t] << std::endl;
                     b2h[inv_pos[t]] = true;
                 }
 
+                std::cout << "i: " << i << " t.second=" << t.second << std::endl;
                 i++;
             } while (i < pos.size() && !bh[i]);
+
+            std::cout << "inv_pos*****: ";
+            for (auto &x : inv_pos) {
+                std::cout << "(" << x.first.first << "," << x.first.second << "->" << x.second << ")  ";
+            }
+            std::cout << std::endl;
 
             k = i;
             i = j;
@@ -109,7 +119,8 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
                 if (t.second >= 0) {
                     int q = inv_pos[t];
 
-                    if (b2h[q+1] && (j <= q) && (q < k) && (j <= (q+1)) && ((q+1) < k)) {
+                    if ((j <= q) && (q < k) && (j <= (q+1)) &&
+                        ((q+1) < k) && b2h[q+1]) {
                         b2h[q+1] = false;
                     }
                 }
@@ -117,6 +128,12 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
                 i++;
             } while (i < k);
         }
+
+        std::cout << "inv_pos: ";
+        for (auto &x : inv_pos) {
+            std::cout << "(" << x.first.first << "," << x.first.second << "->" << x.second << ")  ";
+        }
+        std::cout << std::endl;
 
         bh = b2h;
         for (auto &x : inv_pos) {
@@ -181,6 +198,12 @@ int main() {
 
     auto sa = calc_sa(inp);
     for (auto &p : sa) {
+        std::cout << "(" << p.first << "," << p.second << ")  ";
+    }
+    std::cout << std::endl;
+
+    auto sa2 = calc_sa_stupid(inp);
+    for (auto &p : sa2) {
         std::cout << "(" << p.first << "," << p.second << ")  ";
     }
     std::cout << std::endl;
