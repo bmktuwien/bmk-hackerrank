@@ -56,7 +56,7 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
 
     int H = 1;
 
-    while (H <= 2*n) {
+    while (H < n) {
         std::cout << "stage: " << H << std::endl;
 
         std::cout << "pos: ";
@@ -81,6 +81,12 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
         }
         std::cout << std::endl;
 
+        for (int i = pos.size() - H; i >= 0 && i < pos.size(); i++) {
+            int q = inv_pos[std::make_pair(pos[i].first, i)];
+
+            count[q] += 1;
+        }
+
         int k = 0;
         int i = 0;
 
@@ -96,6 +102,9 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
 
                     count[q] += 1;
                     inv_pos[t] += (count[q] - 1);
+                    if (inv_pos[t] >= pos.size()) {
+                        std::cout << "SHIW: " << count[q] << " q=" << q << std::endl;
+                    }
                     b2h[inv_pos[t]] = true;
                 }
 
