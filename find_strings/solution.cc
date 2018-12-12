@@ -56,7 +56,7 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
 
     int H = 1;
 
-    while (H < n) {
+    while (H <= n) {
         std::cout << "stage: " << H << std::endl;
 
         std::cout << "pos: ";
@@ -74,6 +74,8 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
             }
             inv_pos[pos[i]] = j;
         }
+
+        auto inv_pos_copy(inv_pos);
 
         std::cout << "inv_pos: ";
         for (auto &x : inv_pos) {
@@ -102,9 +104,6 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
 
                     count[q] += 1;
                     inv_pos[t] += (count[q] - 1);
-                    if (inv_pos[t] >= pos.size()) {
-                        std::cout << "SHIW: " << count[q] << " q=" << q << std::endl;
-                    }
                     b2h[inv_pos[t]] = true;
                 }
 
@@ -120,21 +119,31 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
             k = i;
             i = j;
 
-            do {
-                auto t = std::make_pair(pos[i].first, pos[i].second - H);
+            while (i+1 < k) {
+                auto t1 = std::make_pair(pos[i].first, pos[i].second - H);
+                auto t2 = std::make_pair(pos[i+1].first, pos[i+1].second - H);
 
-                if (t.second >= 0) {
-                    int q = inv_pos[t];
+                if (t1.second >= 0 && t2.second >= 0) {
+                    int tmp1 = inv_pos[t1];
+                    int tmp2 = inv_pos[t2];
+                    int q1 = std::min(tmp1, tmp2);
+                    int q2 = std::max(tmp1, tmp2);
 
-                    if ((j <= q) && (q < k) && (j <= (q+1)) &&
-                        ((q+1) < k) && b2h[q+1]) {
-                        std::cout << "fuck: " << "(" << t.first << "," << t.second << ")" << std::endl;
-                        b2h[q+1] = false;
+                    if ((j <= q1) && (q1 < k) && (j <= q2) && (q2 < k)) {
+                        std::cout << "fuck1: " << std::endl;
+                        b2h[q2] = false;
+                    } else {
+                        if (inv_pos_copy[t1] == inv_pos_copy[t2]) {
+                            std::cout << "fuck2: " << " q1=" << q1 << " q2=" << q2 << " i=" << i << std::endl;
+                            b2h[q2] = false;
+                        }
                     }
+
+
                 }
 
                 i++;
-            } while (i < k);
+            }
         }
 
         std::cout << "inv_pos: ";
