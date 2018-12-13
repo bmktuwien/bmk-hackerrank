@@ -146,12 +146,12 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
     return pos;
 }
 
-std::vector<int> calc_lcp_stupid(const std::string& s, const std::vector<int>& sa) {
+std::vector<int> calc_lcp_stupid(const std::vector<std::string>& ss, const std::vector<std::pair<int,int>>& sa) {
     std::vector<int> res{0};
 
     for (int i = 0; i < sa.size()-1; i++) {
-        auto s1{s.substr(sa[i])};
-        auto s2{s.substr(sa[i+1])};
+        auto s1{ss[sa[i].first].substr(sa[i].second)};
+        auto s2{ss[sa[i+1].first].substr(sa[i+1].second)};
 
         int c = 0;
         int q = 0;
