@@ -3,25 +3,6 @@
 #include <vector>
 #include <map>
 
-std::vector<std::pair<int,int>> calc_sa_stupid(const std::vector<std::string>& ss) {
-    std::vector<std::pair<std::string,std::pair<int,int>>> v;
-
-    for (size_t j = 0; j < ss.size(); j++) {
-        for (size_t i = 0; i < ss[j].length(); i++) {
-            v.push_back(std::make_pair(ss[j].substr(i), std::make_pair(j,i)));
-        }
-    }
-
-
-    std::sort(v.begin(), v.end());
-
-    std::vector<std::pair<int,int>> res;
-    for (auto &p : v) {
-        res.push_back(p.second);
-    }
-
-    return res;
-}
 
 std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
     std::vector<std::vector<std::pair<int,int>>> tmp(26);
@@ -57,15 +38,6 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
     int H = 1;
 
     while (H <= n) {
-
-        /*std::cout << "stage: " << H << std::endl;
-
-        std::cout << "pos: ";
-        for (size_t i = 0; i < pos.size(); i++) {
-            std::cout << "(" << pos[i].first << "," << pos[i].second << "," << bh[i] << ")  ";
-        }
-        std::cout << std::endl;*/
-
         std::vector<int> count(pos.size(), 0);
         std::vector<bool> b2h(bh);
         std::vector<bool> btmp(pos.size(), false);
@@ -76,12 +48,6 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
             }
             inv_pos[pos[i]] = j;
         }
-
-        /*std::cout << "inv_pos: ";
-        for (auto &x : inv_pos) {
-            std::cout << "(" << x.first.first << "," << x.first.second << "->" << x.second << ")  ";
-        }
-        std::cout << std::endl;*/
 
         // process incomplete suffixes first
         for (size_t j = 0; j < ss.size(); j++) {
@@ -156,12 +122,6 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
             pos[x.second] = x.first;
         }
 
-        /*std::cout << "inv_pos***: ";
-        for (auto &x : inv_pos) {
-            std::cout << "(" << x.first.first << "," << x.first.second << "->" << x.second << ")  ";
-        }
-        std::cout << std::endl;*/
-
         H *= 2;
     }
 
@@ -209,49 +169,7 @@ std::vector<int> calc_lcp(const std::vector<std::string>& ss,
     return lcp;
 }
 
-std::vector<int> calc_lcp_stupid(const std::vector<std::string>& ss, const std::vector<std::pair<int,int>>& sa) {
-    std::vector<int> res{0};
-
-    for (int i = 0; i < sa.size()-1; i++) {
-        auto s1{ss[sa[i].first].substr(sa[i].second)};
-        auto s2{ss[sa[i+1].first].substr(sa[i+1].second)};
-
-        int c = 0;
-        int q = 0;
-        int r = 0;
-        while (q < s1.size() && r < s2.size() && s1[q] == s2[q]) {
-            q++;
-            r++;
-            c++;
-        }
-
-        res.push_back(c);
-    }
-
-    return res;
-}
-
 void solve(const std::vector<std::string>& ss, int k,
-           const std::vector<std::pair<int,int>>& sa, const std::vector<int> &lcp) {
-    int cnt = 0;
-
-    for (size_t i = 0; i < sa.size(); i++) {
-        auto suf = sa[i];
-        int m = ss[suf.first].size() - suf.second - 1;
-        int p = m - lcp[i] + 1;
-
-        if (cnt + p >= k) {
-            std::cout << ss[suf.first].substr(suf.second,lcp[i]+k-cnt) << std::endl;
-            return;
-        }
-
-        cnt += p;
-    }
-
-    std::cout << "INVALID" << std::endl;
-}
-
-void solve2(const std::vector<std::string>& ss, int k,
            const std::vector<std::pair<int,int>>& sa, const std::vector<int> &lcp) {
     int cnt = 0;
 
@@ -283,34 +201,6 @@ int main() {
         inp.push_back(s);
     }
 
-    /*auto sa = calc_sa(inp);
-    std::cout << "sa       : ";
-    for (auto &p : sa) {
-        std::cout << "(" << p.first << "," << p.second << ")  ";
-    }
-    std::cout << std::endl;
-
-    auto sa2 = calc_sa_stupid(inp);
-    std::cout << "sa_stupid: ";
-    for (auto &p : sa2) {
-        std::cout << "(" << p.first << "," << p.second << ")  ";
-    }
-    std::cout << std::endl;
-
-    auto lcp = calc_lcp(inp, sa);
-    std::cout << "lcp       : ";
-    for (auto i : lcp) {
-        std::cout << i << ", ";
-    }
-    std::cout << std::endl;
-
-    auto lcp2 = calc_lcp_stupid(inp, sa2);
-    std::cout << "lcp_stupid: ";
-    for (auto i : lcp2) {
-        std::cout << i << ", ";
-    }
-    std::cout << std::endl;*/
-
     auto sa = calc_sa(inp);
     auto lcp = calc_lcp(inp, sa);
 
@@ -323,22 +213,4 @@ int main() {
 
         solve(inp, k, sa, lcp);
     }
-
-
-    //auto sa = calc_sa_stupid(inp);
-    /*auto lcp = calc_lcp_stupid(inp, sa);
-
-    std::cout << "sa: ";
-    for (auto i : sa) {
-        std::cout << i << ", ";
-    }
-    std::cout << std::endl;
-
-    std::cout << "lcp: ";
-    for (auto i : lcp) {
-        std::cout << i << ", ";
-    }
-    std::cout << std::endl;
-
-    solve(inp, k, sa, lcp);*/
 }
