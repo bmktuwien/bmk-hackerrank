@@ -67,6 +67,7 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
 
         std::vector<int> count(pos.size(), 0);
         std::vector<bool> b2h(bh);
+        std::vector<bool> btmp(pos.size(), false);
 
         for (size_t i = 0, j = 0; i < pos.size(); i++) {
             if (bh[i]) {
@@ -85,6 +86,7 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
             int q = inv_pos[std::make_pair(pos[i].first, i)];
 
             count[q] += 1;
+            b2h[q] = true;
         }
 
         int k = 0;
@@ -93,7 +95,6 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
         while (i < pos.size()) {
             int j = k;
             i = j;
-            std::vector<bool> btmp(pos.size(), false);
 
             do {
                 auto t = std::make_pair(pos[i].first, pos[i].second - H);
@@ -113,21 +114,32 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
 
             k = i;
             i = j;
-
             do {
                 auto t = std::make_pair(pos[i].first, pos[i].second - H);
 
                 if (t.second >= 0) {
                     int q = inv_pos[t];
 
-                    if (q+1 < pos.size() && btmp[q+1])  {
-                        std::cout << "fuck: " << std::endl;
+                    if (q+1 < pos.size() && btmp[q+1] && !bh[q+1])  {
+                        std::cout << "fuck: " << " q=" << q << " j=" << j << " k=" << k << std::endl;
                         b2h[q+1] = false;
                     }
                 }
 
                 i++;
             } while (i < k);
+
+                k = i;
+                i = j;
+                do {
+                    auto t = std::make_pair(pos[i].first, pos[i].second - H);
+
+                    if (t.second >= 0) {
+                        btmp[inv_pos[t]] = false;
+                    }
+
+                    i++;
+                } while (i < k);
         }
 
         std::cout << "inv_pos: ";
