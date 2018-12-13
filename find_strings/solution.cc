@@ -57,14 +57,6 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
     int H = 1;
 
     while (H <= n) {
-        std::cout << "stage: " << H << std::endl;
-
-        std::cout << "pos: ";
-        for (size_t i = 0; i < pos.size(); i++) {
-            std::cout << "(" << pos[i].first << "," << pos[i].second << "," << bh[i] << ")  ";
-        }
-        std::cout << std::endl;
-
         std::vector<int> count(pos.size(), 0);
         std::vector<bool> b2h(bh);
         std::vector<bool> btmp(pos.size(), false);
@@ -76,17 +68,14 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
             inv_pos[pos[i]] = j;
         }
 
-        std::cout << "inv_pos: ";
-        for (auto &x : inv_pos) {
-            std::cout << "(" << x.first.first << "," << x.first.second << "->" << x.second << ")  ";
-        }
-        std::cout << std::endl;
+        // process incomplete suffixes first
+        for (size_t j = 0; j < ss.size(); j++) {
+            for (int i = ss[j].size() - H; i >= 0 && i < ss[j].size(); i++) {
+                int q = inv_pos[std::make_pair(j, i)];
 
-        for (int i = pos.size() - H; i >= 0 && i < pos.size(); i++) {
-            int q = inv_pos[std::make_pair(pos[i].first, i)];
-
-            count[q] += 1;
-            b2h[q] = true;
+                count[q] += 1;
+                b2h[q] = true;
+            }
         }
 
         int k = 0;
@@ -96,6 +85,7 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
             int j = k;
             i = j;
 
+            // first loop marks the suffixes which are moved
             do {
                 auto t = std::make_pair(pos[i].first, pos[i].second - H);
 
@@ -112,6 +102,7 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
             } while (i < pos.size() && !bh[i]);
 
 
+            // second loop marks the H buckets correctly
             k = i;
             i = j;
             do {
@@ -121,7 +112,6 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
                     int q = inv_pos[t];
 
                     if (q+1 < pos.size() && btmp[q+1] && !bh[q+1])  {
-                        std::cout << "fuck: " << " q=" << q << " j=" << j << " k=" << k << std::endl;
                         b2h[q+1] = false;
                     }
                 }
@@ -129,24 +119,21 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
                 i++;
             } while (i < k);
 
-                k = i;
-                i = j;
-                do {
-                    auto t = std::make_pair(pos[i].first, pos[i].second - H);
 
-                    if (t.second >= 0) {
-                        btmp[inv_pos[t]] = false;
-                    }
+            // finally cleanup the btmp
+            k = i;
+            i = j;
+            do {
+                auto t = std::make_pair(pos[i].first, pos[i].second - H);
 
-                    i++;
-                } while (i < k);
+                if (t.second >= 0) {
+                    btmp[inv_pos[t]] = false;
+                }
+
+                i++;
+            } while (i < k);
         }
 
-        std::cout << "inv_pos: ";
-        for (auto &x : inv_pos) {
-            std::cout << "(" << x.first.first << "," << x.first.second << "->" << x.second << ")  ";
-        }
-        std::cout << std::endl;
 
         bh = b2h;
         for (auto &x : inv_pos) {
