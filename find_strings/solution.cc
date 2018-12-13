@@ -57,6 +57,15 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
     int H = 1;
 
     while (H <= n) {
+
+        /*std::cout << "stage: " << H << std::endl;
+
+        std::cout << "pos: ";
+        for (size_t i = 0; i < pos.size(); i++) {
+            std::cout << "(" << pos[i].first << "," << pos[i].second << "," << bh[i] << ")  ";
+        }
+        std::cout << std::endl;*/
+
         std::vector<int> count(pos.size(), 0);
         std::vector<bool> b2h(bh);
         std::vector<bool> btmp(pos.size(), false);
@@ -68,12 +77,19 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
             inv_pos[pos[i]] = j;
         }
 
+        /*std::cout << "inv_pos: ";
+        for (auto &x : inv_pos) {
+            std::cout << "(" << x.first.first << "," << x.first.second << "->" << x.second << ")  ";
+        }
+        std::cout << std::endl;*/
+
         // process incomplete suffixes first
         for (size_t j = 0; j < ss.size(); j++) {
-            for (int i = ss[j].size() - H; i >= 0 && i < ss[j].size(); i++) {
-                int q = inv_pos[std::make_pair(j, i)];
-
+            for (int i = std::max<int>(ss[j].size()-H,0); i < ss[j].size(); i++) {
+                auto t = std::make_pair(j, i);
+                int q = inv_pos[t];
                 count[q] += 1;
+                inv_pos[t] += (count[q] - 1);
                 b2h[q] = true;
             }
         }
@@ -139,6 +155,12 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
         for (auto &x : inv_pos) {
             pos[x.second] = x.first;
         }
+
+        /*std::cout << "inv_pos***: ";
+        for (auto &x : inv_pos) {
+            std::cout << "(" << x.first.first << "," << x.first.second << "->" << x.second << ")  ";
+        }
+        std::cout << std::endl;*/
 
         H *= 2;
     }
@@ -209,25 +231,49 @@ std::vector<int> calc_lcp_stupid(const std::vector<std::string>& ss, const std::
     return res;
 }
 
-void solve(const std::string& input, int k, const std::vector<int>& sa, const std::vector<int> &lcp) {
+void solve(const std::vector<std::string>& ss, int k,
+           const std::vector<std::pair<int,int>>& sa, const std::vector<int> &lcp) {
     int cnt = 0;
 
     for (size_t i = 0; i < sa.size(); i++) {
-        int m = input.size() - sa[i] - 1;
+        auto suf = sa[i];
+        int m = ss[suf.first].size() - suf.second - 1;
         int p = m - lcp[i] + 1;
 
         if (cnt + p >= k) {
-            std::cout << input.substr(sa[i],lcp[i]+k-cnt) << std::endl;
+            std::cout << ss[suf.first].substr(suf.second,lcp[i]+k-cnt) << std::endl;
             return;
         }
 
         cnt += p;
     }
+
+    std::cout << "INVALID" << std::endl;
+}
+
+void solve2(const std::vector<std::string>& ss, int k,
+           const std::vector<std::pair<int,int>>& sa, const std::vector<int> &lcp) {
+    int cnt = 0;
+
+    for (size_t i = 0; i < sa.size(); i++) {
+        auto suf = sa[i];
+        int m = ss[suf.first].size() - suf.second - 1;
+        int p = m - lcp[i] + 1;
+
+        if (cnt + p >= k) {
+            std::cout << ss[suf.first].substr(suf.second,lcp[i]+k-cnt) << std::endl;
+            return;
+        }
+
+        cnt += p;
+    }
+
+    std::cout << "INVALID" << std::endl;
 }
 
 int main() {
     std::vector<std::string> inp;
-    int n, k;
+    int n;
 
     std::cin >> n;
 
@@ -237,7 +283,7 @@ int main() {
         inp.push_back(s);
     }
 
-    auto sa = calc_sa(inp);
+    /*auto sa = calc_sa(inp);
     std::cout << "sa       : ";
     for (auto &p : sa) {
         std::cout << "(" << p.first << "," << p.second << ")  ";
@@ -263,7 +309,21 @@ int main() {
     for (auto i : lcp2) {
         std::cout << i << ", ";
     }
-    std::cout << std::endl;
+    std::cout << std::endl;*/
+
+    auto sa = calc_sa(inp);
+    auto lcp = calc_lcp(inp, sa);
+
+    int q;
+    std::cin >> q;
+
+    while (q--) {
+        int k;
+        std::cin >> k;
+
+        solve(inp, k, sa, lcp);
+    }
+
 
     //auto sa = calc_sa_stupid(inp);
     /*auto lcp = calc_lcp_stupid(inp, sa);
