@@ -146,6 +146,47 @@ std::vector<std::pair<int,int>> calc_sa(const std::vector<std::string>& ss) {
     return pos;
 }
 
+std::vector<int> calc_lcp(const std::vector<std::string>& ss,
+                          const std::vector<std::pair<int,int>>& sa) {
+    std::map<std::pair<int,int>,int> res;
+    std::map<std::pair<int,int>,std::pair<int,int>> C;
+
+    for (int i = 1; i < sa.size(); i++) {
+        C[sa[i]] = sa[i-1];
+    }
+
+    for (int j = 0; j < ss.size(); j++) {
+        int l = 0;
+
+        for (int i = 0; i < ss[j].size(); i++) {
+            auto p = std::make_pair(j,i);
+
+            if (C.find(p) != C.end()) {
+                auto cp = C[p];
+
+                while (i+l < ss[j].size() && cp.second+l < ss[cp.first].size() &&
+                       ss[j][i+l] == ss[cp.first][cp.second+l]) {
+                    l++;
+                }
+
+                res[std::make_pair(j,i)] = l;
+
+                l = std::max(l-1, 0);
+            } else {
+                res[std::make_pair(j,i)] = 0;
+                l = 0;
+            }
+        }
+    }
+
+    std::vector<int> lcp(sa.size());
+    for (int i = 0; i < sa.size(); i++) {
+        lcp[i] = res[sa[i]];
+    }
+
+    return lcp;
+}
+
 std::vector<int> calc_lcp_stupid(const std::vector<std::string>& ss, const std::vector<std::pair<int,int>>& sa) {
     std::vector<int> res{0};
 
@@ -197,14 +238,30 @@ int main() {
     }
 
     auto sa = calc_sa(inp);
+    std::cout << "sa       : ";
     for (auto &p : sa) {
         std::cout << "(" << p.first << "," << p.second << ")  ";
     }
     std::cout << std::endl;
 
     auto sa2 = calc_sa_stupid(inp);
+    std::cout << "sa_stupid: ";
     for (auto &p : sa2) {
         std::cout << "(" << p.first << "," << p.second << ")  ";
+    }
+    std::cout << std::endl;
+
+    auto lcp = calc_lcp(inp, sa);
+    std::cout << "lcp       : ";
+    for (auto i : lcp) {
+        std::cout << i << ", ";
+    }
+    std::cout << std::endl;
+
+    auto lcp2 = calc_lcp_stupid(inp, sa2);
+    std::cout << "lcp_stupid: ";
+    for (auto i : lcp2) {
+        std::cout << i << ", ";
     }
     std::cout << std::endl;
 
