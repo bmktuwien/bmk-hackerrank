@@ -20,11 +20,13 @@ import           Data.STRef ( newSTRef, readSTRef, writeSTRef
 import           Data.List (group, sort, sortBy)
 import           Data.Ord (comparing)
 
+import Debug.Trace
+
 data Alpha a = Sentinal Int -- ^ Used to mark the end of a string.
                             -- The `Int` parameter is used to encode
                             -- which string this is the end of, in cases
                             -- where there are multiple.
-             | Alpha a -- ^ An actual character in the string.
+             | Alpha Int Int a -- ^ An actual character in the string.
     deriving (Eq, Ord, Show)
 
 data SuffixArray a = SuffixArray
@@ -43,13 +45,18 @@ data SuffixArray a = SuffixArray
 type Arr s = STUArray s Int Int
 
 prepare :: [[a]] -> [Alpha a]
-prepare = concat . zipWith (\a b -> b ++ [a]) sentinals . map (map Alpha)
+prepare = concat . zipWith (\a b -> b ++ [a]) sentinals .
+          map (\(i,s) -> map (\(idx,c) -> Alpha i idx c) s) . map(\l -> (length l, zip [0..] l))
 
 rank :: Ord a => [a] -> [Int]
 rank = concat . zipWith (map . const) [0 ..] . group
 
 sentinals :: [Alpha a]
 sentinals = map Sentinal [0..]
+
+isSentinal :: Alpha a -> Bool
+isSentinal (Sentinal _) = True
+isSentinal _ = False
 
 suffixArray :: Ord a => [[a]] -> SuffixArray a
 suffixArray xs = SuffixArray ss as lcp
@@ -152,3 +159,23 @@ suffixArray xs = SuffixArray ss as lcp
             writeArray res i (len' + newMatching)
             writeSTRef len $ max 0 (len' + newMatching - 1)
       return res
+
+query :: SuffixArray a -> Int -> [Alpha a]
+query sa k = go 0 $ A.elems suffixes
+  where
+    go cnt [] = []
+    go cnt (i:is)
+      | cnt+p >= k = A.elems $ A.ixmap (pos,pos+lcp+k-cnt-1) succ alphas
+      | otherwise  = go (trace (show (len,pos,lcp,p)) (cnt+p)) is
+      where
+        x = alphas ! i
+
+        (len,pos,lcp) | (Sentinal _)    <- x = (0,0,0)
+                      | (Alpha l idx _) <- x = (l,idx,lcps!i)
+
+        p | isSentinal x = 0
+          | otherwise = len-pos-lcp
+
+    alphas = toAlphas sa
+    suffixes = toSuffixes sa
+    lcps = toLcp sa
