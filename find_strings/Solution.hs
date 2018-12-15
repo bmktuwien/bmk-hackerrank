@@ -3,7 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE CPP #-}
 
-import           Control.Monad (forM_, when)
+import           Control.Monad (forM_, replicateM_, replicateM, when)
 import           Control.Monad.ST (ST)
 import qualified Data.Array.IArray as A
 import           Data.Array.IArray (Array, (!))
@@ -17,8 +17,10 @@ import           Data.Ord (comparing)
 import           Data.STRef ( newSTRef, readSTRef, writeSTRef
                             , modifySTRef')
 
-import           Data.List (group, sort, sortBy)
+import           Data.List (group, sort, sortBy, null)
 import           Data.Ord (comparing)
+
+import Debug.Trace
 
 data Alpha a = Sentinal Int -- ^ Used to mark the end of a string.
                             -- The `Int` parameter is used to encode
@@ -152,3 +154,52 @@ suffixArray xs = SuffixArray ss as lcp
             writeArray res i (len' + newMatching)
             writeSTRef len $ max 0 (len' + newMatching - 1)
       return res
+
+calcLengthArray :: SuffixArray a -> UArray Int Int
+calcLengthArray sa = A.listArray (0,length l - 1) l
+  where
+    l = init $ scanr f 0 [0..length alphas-1]
+    f i c | (Sentinal _) <- (alphas ! i) = 0
+          | otherwise = c+1
+
+    alphas = toAlphas sa
+
+
+query :: SuffixArray a -> Int -> [a]
+query sa k = map f $ go 0 $ A.assocs suffixes
+  where
+    f (Sentinal _) = error "impossible happened"
+    f (Alpha a) = a
+
+    go _ [] = []
+    go cnt ((j,i):rs)
+      | cnt+p >= k = A.elems $ A.ixmap (i,i+x-1) id alphas
+      | otherwise = go (cnt+p) rs
+        where
+          x = (lcps!j)+k-cnt
+          p = (ls!i) - (lcps!j)
+
+    ls = calcLengthArray sa
+
+    lcps = toLcp sa
+    suffixes = toSuffixes sa
+    alphas = toAlphas sa
+
+
+main :: IO ()
+main = do
+  n  <- readLn :: IO Int
+  ss <- replicateM n getLine
+
+  let sa  = suffixArray ss
+
+  q <- readLn :: IO Int
+
+  replicateM_ q $ do
+    k <- readLn :: IO Int
+
+    let res = query sa k
+
+    if null res
+      then putStrLn "INVALID"
+      else putStrLn res
