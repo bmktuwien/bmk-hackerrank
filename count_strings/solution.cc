@@ -8,6 +8,8 @@
 
 using namespace std;
 
+#define MOD 1000000007
+
 struct nst {
     vector<int> a[2], e;
     bool f=0;
@@ -95,6 +97,7 @@ string regexp_to_postfix(const string& regexp) {
         postfix += op.top();
         op.pop();
     }
+
     return postfix;
 }
 
@@ -152,11 +155,9 @@ void kleene_star() {
     nfa_size++;
 }
 
-void postfix_to_nfa(string postfix){
-    for(unsigned int i=0; i<postfix.size(); i++)
-    {
-        switch(postfix[i])
-        {
+void postfix_to_nfa(string postfix) {
+    for(int i=0; i<postfix.size(); i++) {
+        switch(postfix[i]) {
         case 'a':
         case 'b': character(postfix[i]-'a'); break;
         case '*': kleene_star(); break;
@@ -268,14 +269,15 @@ void print_dfa(){
     cout<<"---------------------------------------------------------"<<endl;
 }
 
-vector<vector<int>> matrix_mult(int n, const vector<vector<int>> &a, const vector<vector<int>> &b) {
-    vector<vector<int>> result(n, vector<int>(n));
+vector<vector<long>> matrix_mult(int n, const vector<vector<long>> &a, const vector<vector<long>> &b) {
+    vector<vector<long>> result(n, vector<long>(n));
 
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
-            int c = 0;
+            long c = 0;
             for (int k = 0; k < n; k++) {
                 c += a[i][k]*b[k][j];
+                c %= MOD;
             }
             result[i][j] = c;
         }
@@ -284,9 +286,9 @@ vector<vector<int>> matrix_mult(int n, const vector<vector<int>> &a, const vecto
     return result;
 }
 
-vector<vector<int>> matrix_power(const vector<vector<int>> &a, int k) {
+vector<vector<long>> matrix_power(const vector<vector<long>> &a, long k) {
     int n = a.size();
-    vector<vector<int>> result(n, vector<int>(n, 0));
+    vector<vector<long>> result(n, vector<long>(n, 0));
     for (int i = 0; i < n; i++) {
         result[i][i] = 1;
     }
@@ -307,61 +309,64 @@ vector<vector<int>> matrix_power(const vector<vector<int>> &a, int k) {
 }
 
 int main() {
-    string inp;
-    int k;
-    cin >> inp;
-    cin >> k;
+    int q;
+    cin >> q;
 
-    auto postfix = regexp_to_postfix(insert_concat(inp));
+    while (q--) {
+        string inp;
+        int k;
+        cin >> inp;
+        cin >> k;
 
-    std::cout << postfix << std::endl;
+        nfa.clear();
+        dfa.clear();
+        nfa_size = 0;
+        dfa_size = 0;
 
-    postfix_to_nfa(postfix);
+        auto postfix = regexp_to_postfix(insert_concat(inp));
 
-    int final_state=st.top();st.pop();
-    int start_state=st.top();st.pop();
-    //cout<<start_state<<' '<<final_state<<endl;
-    nfa[final_state].f=1;
+        //std::cout << postfix << std::endl;
 
-    set<int> si;
-    queue<set<int> > que;
-    nfa_to_dfa(si,que,start_state);
+        postfix_to_nfa(postfix);
 
-    print_dfa();
-    vector<vector<int>> trans_matrix(dfa.size());
-    for (int i = 0; i < dfa.size(); i++) {
-        for (int j = 0; j < dfa.size(); j++) {
-            trans_matrix[i].push_back(0);
+        int final_state=st.top();st.pop();
+        int start_state=st.top();st.pop();
+        nfa[final_state].f=1;
+
+        set<int> si;
+        queue<set<int>> que;
+        nfa_to_dfa(si,que,start_state);
+
+        //print_dfa();
+        vector<vector<long>> trans_matrix(dfa.size());
+        for (int i = 0; i < dfa.size(); i++) {
+            for (int j = 0; j < dfa.size(); j++) {
+                trans_matrix[i].push_back(0);
+            }
         }
-    }
 
-    for (int i = 0; i < dfa.size(); i++) {
-        trans_matrix[i][dfa[i].a[0]]++;
-        trans_matrix[i][dfa[i].a[1]]++;
-    }
-
-    for (int i = 0; i < trans_matrix.size(); i++) {
-        for (int j = 0; j < trans_matrix.size(); j++) {
-            std::cout << trans_matrix[i][j] << " , ";
+        for (int i = 0; i < dfa.size(); i++) {
+            trans_matrix[i][dfa[i].a[0]]++;
+            trans_matrix[i][dfa[i].a[1]]++;
         }
-        std::cout << std::endl;
-    }
 
-    auto M = matrix_power(trans_matrix, k);
+        auto M = matrix_power(trans_matrix, k);
 
-    for (int i = 0; i < M.size(); i++) {
-        for (int j = 0; j < M.size(); j++) {
-            std::cout << M[i][j] << " , ";
+        /*for (int i = 0; i < M.size(); i++) {
+            for (int j = 0; j < M.size(); j++) {
+                std::cout << M[i][j] << " , ";
+            }
+            std::cout << std::endl;
+            }*/
+
+        long result = 0;
+        for (int i = 0; i < dfa.size(); i++) {
+            if (dfa[i].f) {
+                result += M[0][i];
+                result %= MOD;
+            }
         }
-        std::cout << std::endl;
-    }
 
-    int result = 0;
-    for (int i = 0; i < dfa.size(); i++) {
-        if (dfa[i].f) {
-            result += M[0][i];
-        }
+        std::cout << result << std::endl;
     }
-
-    std::cout << "result: " << result << std::endl;
 }
