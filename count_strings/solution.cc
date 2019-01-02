@@ -58,13 +58,11 @@ int priority(char c) {
     }
 }
 
-string regexp_to_postfix(const string& regexp)
-{
+string regexp_to_postfix(const string& regexp) {
     string postfix="";
     stack<char> op;
     char c;
-    for(unsigned int i=0; i<regexp.size(); i++)
-    {
+    for(unsigned int i=0; i<regexp.size(); i++) {
         switch(regexp[i])
         {
             case 'a':
@@ -92,16 +90,15 @@ string regexp_to_postfix(const string& regexp)
         }
         //cout<<regexp[i]<<' '<<postfix<<endl;
     }
-    while(!op.empty())
-    {
+
+    while(!op.empty()) {
         postfix += op.top();
         op.pop();
     }
     return postfix;
 }
 
-void character(int i)
-{
+void character(int i) {
     nfa.push_back(init_nfa_state);
     nfa.push_back(init_nfa_state);
     nfa[nfa_size].a[i].push_back(nfa_size+1);
@@ -111,8 +108,7 @@ void character(int i)
     nfa_size++;
 }
 
-void union_()
-{
+void union_() {
     nfa.push_back(init_nfa_state);
     nfa.push_back(init_nfa_state);
     int d = st.top(); st.pop();
@@ -129,8 +125,7 @@ void union_()
     nfa_size++;
 }
 
-void concatenation()
-{
+void concatenation() {
     int d = st.top(); st.pop();
     int c = st.top(); st.pop();
     int b = st.top(); st.pop();
@@ -140,8 +135,7 @@ void concatenation()
     st.push(d);
 }
 
-void kleene_star()
-{
+void kleene_star() {
     nfa.push_back(init_nfa_state);
     nfa.push_back(init_nfa_state);
     int b = st.top();
@@ -167,7 +161,7 @@ void postfix_to_nfa(string postfix){
         case 'b': character(postfix[i]-'a'); break;
         case '*': kleene_star(); break;
         case '.': concatenation(); break;
-        case '+': union_();
+        case '|': union_();
         }
     }
 }
@@ -200,11 +194,9 @@ set<int> state_change(int c,set<int>&si){
     return temp;
 }
 
-void nfa_to_dfa(set<int>&si,queue<set<int> >&que,int start_state){
+void nfa_to_dfa(set<int> &si,queue<set<int> >&que,int start_state){
     map<set<int>, int> mp;
     mp[si]=-1;
-    set<int> temp1;
-    set<int> temp2;
     int ct=0;
     si.clear();
     si.insert(0);
@@ -220,14 +212,13 @@ void nfa_to_dfa(set<int>&si,queue<set<int> >&que,int start_state){
         si.empty();
         si=que.front();
         f1=false;
-        for (set<int>::iterator it=si.begin(); it!=si.end(); ++it){
+        for (auto it=si.begin(); it!=si.end(); ++it){
             if(nfa[*it].f==true)
                 f1=true;
         }
         dfa[p].f=f1;
-        temp1=state_change(1,si);
-        si=temp1;
-        for (set<int>::iterator it=si.begin(); it!=si.end(); ++it){
+        si=state_change(1,si);
+        for (auto it=si.begin(); it!=si.end(); ++it){
             epsilon_closure(*it,si);
         }
         if(mp.count(si)==0){
@@ -238,12 +229,10 @@ void nfa_to_dfa(set<int>&si,queue<set<int> >&que,int start_state){
         else{
             dfa[p].a[0]=mp.find(si)->second;
         }
-        temp1.clear();
 
         si=que.front();
-        temp2=state_change(2,si);
-        si=temp2;
-        for (set<int>::iterator it=si.begin(); it!=si.end(); ++it){
+        si=state_change(2,si);
+        for (auto it=si.begin(); it!=si.end(); ++it){
             epsilon_closure(*it,si);
         }
         if(mp.count(si)==0){
@@ -254,7 +243,6 @@ void nfa_to_dfa(set<int>&si,queue<set<int> >&que,int start_state){
         else{
             dfa[p].a[1]=mp.find(si)->second;
         }
-        temp2.clear();
         que.pop();
         p++;
     }
@@ -280,11 +268,53 @@ void print_dfa(){
     cout<<"---------------------------------------------------------"<<endl;
 }
 
+vector<vector<int>> matrix_mult(int n, const vector<vector<int>> &a, const vector<vector<int>> &b) {
+    vector<vector<int>> result(n, vector<int>(n));
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            int c = 0;
+            for (int k = 0; k < n; k++) {
+                c += a[i][k]*b[k][j];
+            }
+            result[i][j] = c;
+        }
+    }
+
+    return result;
+}
+
+vector<vector<int>> matrix_power(const vector<vector<int>> &a, int k) {
+    int n = a.size();
+    vector<vector<int>> result(n, vector<int>(n, 0));
+    for (int i = 0; i < n; i++) {
+        result[i][i] = 1;
+    }
+
+    auto A = a;
+
+    while (k > 0) {
+        if (k & 1) {
+            result = matrix_mult(n, result, A);
+        }
+
+        A = matrix_mult(n, A, A);
+
+        k = k >> 1;
+    }
+
+    return result;
+}
+
 int main() {
     string inp;
+    int k;
     cin >> inp;
+    cin >> k;
 
     auto postfix = regexp_to_postfix(insert_concat(inp));
+
+    std::cout << postfix << std::endl;
 
     postfix_to_nfa(postfix);
 
@@ -298,10 +328,10 @@ int main() {
     nfa_to_dfa(si,que,start_state);
 
     print_dfa();
-    int trans_matrix[dfa.size()][dfa.size()];
+    vector<vector<int>> trans_matrix(dfa.size());
     for (int i = 0; i < dfa.size(); i++) {
         for (int j = 0; j < dfa.size(); j++) {
-            trans_matrix[i][j] = 0;
+            trans_matrix[i].push_back(0);
         }
     }
 
@@ -310,11 +340,28 @@ int main() {
         trans_matrix[i][dfa[i].a[1]]++;
     }
 
-    for (int i = 0; i < dfa.size(); i++) {
-        for (int j = 0; j < dfa.size(); j++) {
+    for (int i = 0; i < trans_matrix.size(); i++) {
+        for (int j = 0; j < trans_matrix.size(); j++) {
             std::cout << trans_matrix[i][j] << " , ";
         }
         std::cout << std::endl;
     }
 
+    auto M = matrix_power(trans_matrix, k);
+
+    for (int i = 0; i < M.size(); i++) {
+        for (int j = 0; j < M.size(); j++) {
+            std::cout << M[i][j] << " , ";
+        }
+        std::cout << std::endl;
+    }
+
+    int result = 0;
+    for (int i = 0; i < dfa.size(); i++) {
+        if (dfa[i].f) {
+            result += M[0][i];
+        }
+    }
+
+    std::cout << "result: " << result << std::endl;
 }
