@@ -1,59 +1,49 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-rods = [[], [], [], []]
+import copy
+
 cache = {}
 N = 0
 target_sig = ''
-marked = {}
 
 
-def get_sig():
+def get_sig(c):
     sig = ''
-    for r in rods:
+    for r in c:
         sig += ''.join(map(str, r)).zfill(N)
 
     return sig
 
 
-def solve():
-    sig = get_sig()
-    marked[sig] = True
-    print(target_sig)
+def solve(c):
+    candidates = [c]
 
-    if sig == target_sig:
-        print("fuck!!!")
-        return 0
+    while candidates:
+        new_candidates = []
 
-    candidates = []
-    print(sig)
-    print(rods)
+        for c, q in candidates:
+            for i in range(4):
+                for j in range(4):
+                    if c[i] and (not c[j] or c[i][-1] < c[j][-1]):
+                        new_c = copy.deepcopy(c)
 
-    for i in range(4):
-        for j in range(4):
-            if rods[i] and (not rods[j] or rods[i][-1] < rods[j][-1]):
-                rods[j].append(rods[i].pop())
+                        new_c[j].append(new_c[i].pop())
+                        new_q = q + 1
 
-                new_sig = get_sig()
-                
-                if new_sig in cache:
-                    print("cache hit")
-                    candidates.append(cache[new_sig] + 1)
-                else:
-                    if new_sig not in marked:
-                        q = solve()
-                        if q >= 0:
-                            candidates.append(q+1)
-                    else:
-                        print("no recursion")
+                        new_sig = get_sig(new_c)
 
-                rods[i].append(rods[j].pop())
+                        if new_sig in cache:
+                            cached_q = cache[new_sig]
+                            if new_q < cached_q:
+                                print(new_sig, new_q)
+                                cache[new_sig] = new_q
+                                new_candidates.append((new_c, new_q))
+                        else:
+                            cache[new_sig] = new_q
+                            new_candidates.append((new_c, new_q))
 
-    if candidates:
-        cache[sig] = min(candidates)
-        return cache[sig]
-    else:
-        return -1
+        candidates = new_candidates
 
 
 def main():
@@ -63,15 +53,14 @@ def main():
     N = int(raw_input())
     a = map(int, raw_input().rstrip().split())
 
+    c = [[], [], [], []]
     for idx, elem in enumerate(a):
-        rods[elem-1].insert(0, idx+1)
+        c[elem-1].insert(0, idx+1)
 
     target_sig = ''.join(map(str, reversed(range(1, N+1)))) + '0'*N + '0'*N + '0'*N
 
-    result = solve()
-
-    print(rods)
-    print(result)
+    solve((c, 0))
+    print(cache[target_sig])
 
 
 if __name__ == '__main__':
