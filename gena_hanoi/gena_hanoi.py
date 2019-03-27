@@ -1,37 +1,44 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-import copy
-
-cache = {}
+cache = set()
+X = 0
 
 
 def get_sig(c):
     return tuple(c[0]), tuple(c[1]), tuple(c[2]), tuple(c[3])
 
 
-def prune_point(c, N):
+def prune_point(c, n):
+    global X
+
     i = 0
-    j = N
+    j = n
 
     while i < len(c[0]) and c[0][i] == j:
         i += 1
         j -= 1
 
-    if i == N:
+    if i == n:
         return 4
     if i == len(c[0]):
-        if len(c[1]) == 1 and c[1][0] == j:
-            return 1
-        elif len(c[2]) == 1 and c[2][0] == j:
-            return 2
-        elif len(c[3]) == 1 and c[3][0] == j:
-            return 3
+        if j >= X:
+            return -1
+        else:
+            X = j
+            print(j)
+
+            if len(c[1]) == 1 and c[1][0] == j:
+                return 1
+            elif len(c[2]) == 1 and c[2][0] == j:
+                return 2
+            elif len(c[3]) == 1 and c[3][0] == j:
+                return 3
 
     return -1
 
 
-def solve(c, N):
+def solve(c, n):
     candidates = [c]
 
     q = 0
@@ -39,7 +46,7 @@ def solve(c, N):
         new_candidates = []
 
         for c in candidates:
-            i = prune_point(c, N)
+            i = prune_point(c, n)
 
             if i == 4:
                 print(q)
@@ -50,8 +57,8 @@ def solve(c, N):
                 new_sig = get_sig(c)
 
                 if new_sig not in cache:
-                    cache[new_sig] = q+1
-                    new_c = copy.deepcopy(c)
+                    cache.add(new_sig)
+                    new_c = [x[:] for x in c]
                     new_candidates.append(new_c)
 
                 c[i].append(c[0].pop())
@@ -66,8 +73,8 @@ def solve(c, N):
                             new_sig = get_sig(c)
 
                             if new_sig not in cache:
-                                cache[new_sig] = q+1
-                                new_c = copy.deepcopy(c)
+                                cache.add(new_sig)
+                                new_c = [x[:] for x in c]
                                 new_candidates.append(new_c)
 
                             c[i].append(c[j].pop())
@@ -79,14 +86,17 @@ def solve(c, N):
 
 
 def main():
-    N = int(raw_input())
+    global X
+
+    n = int(raw_input())
     a = map(int, raw_input().rstrip().split())
 
+    X = n+1
     c = [[], [], [], []]
     for idx, elem in enumerate(a):
         c[elem-1].insert(0, idx+1)
 
-    solve(c, N)
+    solve(c, n)
 
 
 if __name__ == '__main__':
