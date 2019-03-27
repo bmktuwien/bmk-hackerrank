@@ -9,11 +9,7 @@ target_sig = ''
 
 
 def get_sig(c):
-    sig = []
-    for r in c:
-        sig += r + [0]*(N-len(r))
-
-    return tuple(sig)
+    return tuple(c[0]), tuple(c[1]), tuple(c[2]), tuple(c[3])
 
 
 def solve(c):
@@ -59,7 +55,7 @@ def main():
     for idx, elem in enumerate(a):
         c[elem-1].insert(0, idx+1)
 
-    target_sig = get_sig([list(reversed(range(1, N+1))), [0]*N, [0]*N, [0]*N])
+    target_sig = get_sig([list(reversed(range(1, N+1))), [], [], []])
 
     solve((c, 0))
 
