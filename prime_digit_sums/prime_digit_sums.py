@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-dyn_cache = {}
+MOD = 1000000007
 
 
 def is_prime(n):
@@ -16,29 +16,28 @@ def init(qs):
         q /= 10
         res[q] = res.get(q, 0) + 1
 
-    dyn_cache[5] = res
+    return res
 
 
-def calc_next_lvl(qs, n):
-    prev_res = dyn_cache[n-1]
+def calc_next_lvl(qs, n, prev_cache):
     res = {}
 
     for q in qs:
         a = q / 10
         b = q % 10000
-        res[a] = res.get(a, 0) + prev_res.get(b, 0)
+        res[a] = (res.get(a, 0) + prev_cache.get(b, 0)) % MOD
 
-    dyn_cache[n] = res
+    return res
 
 
 def find_all_valid_quintuplets():
     result = []
 
-    for i1 in xrange(9):
-        for i2 in xrange(9):
-            for i3 in xrange(9):
-                for i4 in xrange(9):
-                    for i5 in xrange(9):
+    for i1 in xrange(10):
+        for i2 in xrange(10):
+            for i3 in xrange(10):
+                for i4 in xrange(10):
+                    for i5 in xrange(10):
                         if (is_prime(i1+i2+i3) and
                                 is_prime(i2+i3+i4) and
                                 is_prime(i3+i4+i5) and
@@ -52,39 +51,41 @@ def find_all_valid_quintuplets():
 
 def check(n):
     digits = []
-    while n > 10:
+    while n >= 10:
         digits.append(n%10)
         n /= 10
 
     digits.append(n)
 
     if len(digits) >= 5:
-        for i in xrange(len(digits)-3):
+        for i in xrange(len(digits)-2):
             if not is_prime(digits[i]+digits[i+1]+digits[i+2]):
                 return False
-        for i in xrange(len(digits)-4):
+        for i in xrange(len(digits)-3):
             if not is_prime(digits[i]+digits[i+1]+digits[i+2]+digits[i+3]):
                 return False
-        for i in xrange(len(digits)-5):
-            if not is_prime(digits[i]+digits[i+1]+digits[i+2]+digits[i+4]+digits[i+5]):
+        for i in xrange(len(digits)-4):
+            if not is_prime(digits[i]+digits[i+1]+digits[i+2]+digits[i+3]+digits[i+4]):
                 return False
-
-
+            
+        return True
+    else:
+        return False
 
 
 def solve(q, n):
     qs = find_all_valid_quintuplets()
-    print(qs)
 
-    init(qs)
-    calc_next_lvl(qs, 6)
+    cache = init(qs)
+
+    for i in xrange(6, n+1):
+        cache = calc_next_lvl(qs, i, cache)
 
     res = 0
-    for k, v in dyn_cache[6].iteritems():
+    for k, v in cache.iteritems():
         if k >= 1000:
             res += v
 
-    print(dyn_cache)
     print(res)
 
 
