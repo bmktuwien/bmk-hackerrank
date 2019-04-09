@@ -61,6 +61,7 @@ def solve(q, n):
     res = 0
     for idx in range(1000, len(cache)):
         res += cache[idx]
+        res = res % MOD
 
     print(res)
 
