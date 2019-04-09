@@ -11,24 +11,42 @@ def is_prime(n):
 
 
 def init(qs):
-    res = [0] * 10000
+    res = {}
     
     for q in qs:
         q /= 10
-        res[q] += 1
+        if q in res:
+            res[q] += 1
+        else:
+            res[q] = 1
 
     return res
 
 
-def calc_next_lvl(qs, n, prev_cache):
-    res = [0] * 10000
+def calc_next_lvl(qs, prev_cache):
+    cache = {}
+    res = 0
 
     for q in qs:
         a = q / 10
         b = q % 10000
-        res[a] = (res[a] + prev_cache[b]) % MOD
 
-    return res
+        k = 0
+        if a in cache:
+            k = cache[a]
+
+        if b in prev_cache:
+            k += prev_cache[b]
+
+            if a >= 1000:
+                res += prev_cache[b]
+                res = res % MOD
+
+        k = k % MOD
+        if k > 0:
+            cache[a] = k
+
+    return res, cache
 
 
 def find_all_valid_quintuplets():
@@ -50,25 +68,35 @@ def find_all_valid_quintuplets():
     return result
 
 
-def solve(q, n):
+def solve(queries):
     qs = find_all_valid_quintuplets()
 
     cache = init(qs)
 
-    for i in xrange(6, n+1):
-        cache = calc_next_lvl(qs, i, cache)
+    max_n = max(queries)
+    result_table = {
+        1: 9,
+        2: 0,
+        3: 0,
+        4: 0,
+        5: len(qs)
+    }
 
-    res = 0
-    for idx in range(1000, len(cache)):
-        res += cache[idx]
-        res = res % MOD
+    for n in range(6, max_n+1):
+        res, cache = calc_next_lvl(qs, cache)
+        result_table[n] = res
 
-    print(res)
+    for q in queries:
+        print(result_table[q])
 
 
 if __name__ == '__main__':
     q = int(raw_input())
-    n = int(raw_input())
 
-    solve(q, n)
+    queries = []
+    for _ in range(q):
+        n = int(raw_input())
+        queries.append(n)
+
+    solve(queries)
 
