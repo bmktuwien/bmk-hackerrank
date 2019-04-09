@@ -11,21 +11,22 @@ def is_prime(n):
 
 
 def init(qs):
-    res = {}
+    res = [0] * 10000
+    
     for q in qs:
         q /= 10
-        res[q] = res.get(q, 0) + 1
+        res[q] += 1
 
     return res
 
 
 def calc_next_lvl(qs, n, prev_cache):
-    res = {}
+    res = [0] * 10000
 
     for q in qs:
         a = q / 10
         b = q % 10000
-        res[a] = (res.get(a, 0) + prev_cache.get(b, 0)) % MOD
+        res[a] = (res[a] + prev_cache[b]) % MOD
 
     return res
 
@@ -49,30 +50,6 @@ def find_all_valid_quintuplets():
     return result
 
 
-def check(n):
-    digits = []
-    while n >= 10:
-        digits.append(n%10)
-        n /= 10
-
-    digits.append(n)
-
-    if len(digits) >= 5:
-        for i in xrange(len(digits)-2):
-            if not is_prime(digits[i]+digits[i+1]+digits[i+2]):
-                return False
-        for i in xrange(len(digits)-3):
-            if not is_prime(digits[i]+digits[i+1]+digits[i+2]+digits[i+3]):
-                return False
-        for i in xrange(len(digits)-4):
-            if not is_prime(digits[i]+digits[i+1]+digits[i+2]+digits[i+3]+digits[i+4]):
-                return False
-            
-        return True
-    else:
-        return False
-
-
 def solve(q, n):
     qs = find_all_valid_quintuplets()
 
@@ -82,9 +59,8 @@ def solve(q, n):
         cache = calc_next_lvl(qs, i, cache)
 
     res = 0
-    for k, v in cache.iteritems():
-        if k >= 1000:
-            res += v
+    for idx in range(1000, len(cache)):
+        res += cache[idx]
 
     print(res)
 
