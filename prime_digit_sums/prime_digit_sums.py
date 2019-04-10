@@ -12,7 +12,7 @@ def is_prime(n):
 
 def init(qs):
     res = {}
-    
+
     for q in qs:
         q /= 10
         if q in res:
@@ -23,30 +23,26 @@ def init(qs):
     return res
 
 
-def calc_next_lvl(qs, prev_cache):
-    cache = {}
+def calc_next_lvl(magic_table, prev_table):
+    table = {}
     res = 0
 
-    for q in qs:
-        a = q / 10
-        b = q % 10000
+    for k, v in prev_table.iteritems():
+        if k in magic_table:
+            prefixes = magic_table[k]
 
-        k = 0
-        if a in cache:
-            k = cache[a]
+            for prefix in prefixes:
+                if prefix in table:
+                    t = table[prefix]
+                    table[prefix] = (t + v) % MOD
+                else:
+                    table[prefix] = v
 
-        if b in prev_cache:
-            k += prev_cache[b]
+                if prefix >= 1000:
+                    res += v
+                    res = res % MOD
 
-            if a >= 1000:
-                res += prev_cache[b]
-                res = res % MOD
-
-        k = k % MOD
-        if k > 0:
-            cache[a] = k
-
-    return res, cache
+    return res, table
 
 
 def find_all_valid_quintuplets():
@@ -68,22 +64,37 @@ def find_all_valid_quintuplets():
     return result
 
 
+def get_magic_table(qs):
+    result = {}
+
+    for q in qs:
+        prefix = q / 10
+        suffix = q % 10000
+        if suffix in result:
+            result[suffix].add(prefix)
+        else:
+            result[suffix] = {prefix}
+
+    return result
+
+
 def solve(queries):
     qs = find_all_valid_quintuplets()
+    magic_table = get_magic_table(qs)
 
-    cache = init(qs)
+    table = init(qs)
 
     max_n = max(queries)
     result_table = {
         1: 9,
-        2: 0,
-        3: 0,
-        4: 0,
+        2: 0, #TODO
+        3: 0, #TODO
+        4: 0, #TODO
         5: len(qs)
     }
 
     for n in range(6, max_n+1):
-        res, cache = calc_next_lvl(qs, cache)
+        res, table = calc_next_lvl(magic_table, table)
         result_table[n] = res
 
     for q in queries:
@@ -99,4 +110,3 @@ if __name__ == '__main__':
         queries.append(n)
 
     solve(queries)
-
