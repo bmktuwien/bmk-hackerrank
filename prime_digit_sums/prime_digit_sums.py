@@ -23,13 +23,13 @@ def init(qs):
     return res
 
 
-def calc_next_lvl(magic_table, prev_table):
+def calc_next_lvl(lkup1, lkup2, prev_table):
     table = {}
     res = 0
 
     for k, v in prev_table.iteritems():
-        if k in magic_table:
-            prefixes = magic_table[k]
+        if k in lkup1:
+            prefixes = lkup1[k]
 
             for prefix in prefixes:
                 if prefix in table:
@@ -38,9 +38,10 @@ def calc_next_lvl(magic_table, prev_table):
                 else:
                     table[prefix] = v
 
-                if prefix >= 1000:
-                    res += v
-                    res = res % MOD
+        if k in lkup2:
+            x = lkup2[k]
+            res += (v * x)
+            res = res % MOD
 
     return res, table
 
@@ -64,23 +65,37 @@ def find_all_valid_quintuplets():
     return result
 
 
-def get_magic_table(qs):
+def lookup_tables(qs):
     result = {}
+    result2 = {}
+
+    suffixes = set()
+    for q in qs:
+        suffix = q % 10000
+        suffixes.add(suffix)
 
     for q in qs:
         prefix = q / 10
         suffix = q % 10000
-        if suffix in result:
-            result[suffix].add(prefix)
-        else:
-            result[suffix] = {prefix}
 
-    return result
+        if prefix in suffixes:
+            if suffix in result:
+                result[suffix].add(prefix)
+            else:
+                result[suffix] = {prefix}
+
+        if prefix >= 1000:
+            if suffix in result2:
+                result2[suffix] += 1
+            else:
+                result2[suffix] = 1
+
+    return result, result2
 
 
 def solve(queries):
     qs = find_all_valid_quintuplets()
-    magic_table = get_magic_table(qs)
+    lkup1, lkup2 = lookup_tables(qs)
 
     table = init(qs)
 
@@ -94,7 +109,7 @@ def solve(queries):
     }
 
     for n in range(6, max_n+1):
-        res, table = calc_next_lvl(magic_table, table)
+        res, table = calc_next_lvl(lkup1, lkup2, table)
         result_table[n] = res
 
     for q in queries:
