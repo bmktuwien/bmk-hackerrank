@@ -87,10 +87,10 @@ def solve(queries):
     max_n = max(queries)
     result_table = {
         1: 9,
-        2: 0, #TODO
-        3: 0, #TODO
-        4: 0, #TODO
-        5: len(qs)
+        2: 90,
+        3: 303,
+        4: 280,
+        5: 218
     }
 
     for n in range(6, max_n+1):
