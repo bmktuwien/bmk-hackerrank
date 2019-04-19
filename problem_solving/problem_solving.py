@@ -13,7 +13,7 @@ def bfs(U, V, E, pair_u, pair_v, dist):
             dist[u] = 0
             Q.append(u)
         else:
-            dist[u] = None
+            dist[u] = INF
 
     dist[None] = INF
 
@@ -46,7 +46,7 @@ def dfs(u, E, pair_u, pair_v, dist):
 def hopcraft_karp(U, V, E):
     pair_u = {}
     pair_v = {}
-    dist = {}
+    dist = defaultdict(lambda: INF)
 
     for u in U:
         pair_u[u] = None
@@ -58,8 +58,8 @@ def hopcraft_karp(U, V, E):
         for u in U:
             if pair_u[u] is None:
                 if dfs(u, E, pair_u, pair_v, dist):
-                    matching += 1
 
+                    matching += 1
     return matching
 
 
@@ -72,29 +72,25 @@ def problem_solving(n, k, v):
                 G[j][0].append(i)
                 G[i][1].append(j)
 
-    print(G)
-
     v_out = set()
     v_in = set()
     for i in range(n):
         outgoing, ingoing = G[i]
 
-        if (len(outgoing) - len(ingoing)) > 0:
+        if len(outgoing) > 0:
             v_out.add(i)
-        elif (len(ingoing) - len(outgoing)) > 0:
-            v_in.add(i)
+        if len(ingoing) > 0:
+            v_in.add(-i)
 
-    edges = defaultdict(list)
+    edges = defaultdict(set)
     for v in v_out:
         for neighbor in G[v][0]:
-            if neighbor in v_in:
-                edges[v].append(neighbor)
+            if -neighbor in v_in:
+                edges[v].add(-neighbor)
 
-    print(v_out)
-    print(v_in)
-    print(edges)
+    result = n - hopcraft_karp(v_out, v_in, edges)
+    print(result)
 
-    print(hopcraft_karp(v_out, v_in, edges))
 
 if __name__ == '__main__':
     t = int(raw_input())
