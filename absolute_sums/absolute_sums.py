@@ -28,7 +28,7 @@ def playingWithNumbers(arr, queries):
         hi_sum = total_sum - lo_sum
 
         result = abs(lo_sum + (idx * acc))
-        result += (hi_sum + ((n-idx)*acc))
+        result += abs(hi_sum + ((n-idx)*acc))
         print(result)
 
 
