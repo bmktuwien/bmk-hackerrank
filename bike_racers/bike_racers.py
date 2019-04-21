@@ -114,11 +114,8 @@ if __name__ == '__main__':
 
     bikes = []
 
-    try:
-        for _ in xrange(n):
-            bikes.append(map(int, raw_input().rstrip().split()))
-    except Exception:
-        pass
+    for _ in xrange(m):
+        bikes.append(map(int, raw_input().rstrip().split()))
 
     bikeRacers(bikers, bikes, k)
 
