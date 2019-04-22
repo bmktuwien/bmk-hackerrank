@@ -1,92 +1,79 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import division
 #!/bin/python
-
-from __future__ import print_function
-
-import os
-import sys
 
 from collections import *
 from fractions import *
 
-INF = float('inf')
 
-
-def bfs(U, V, E, pair_u, pair_v, dist):
-    Q = deque()
-
-    for u in U:
-        if pair_u[u] is None:
-            dist[u] = 0
-            Q.append(u)
-        else:
-            dist[u] = INF
-
-    dist[None] = INF
-
-    while Q:
-        u = Q.popleft()
-        if dist[u] < dist[None]:
-            for v in E[u]:
-                if dist[pair_v[v]] == INF:
-                    dist[pair_v[v]] = dist[u] + 1
-                    Q.append(pair_v[v])
-
-    return dist[None] != INF
-
-
-def dfs(u, E, pair_u, pair_v, dist):
-    if u is not None:
-        for v in E[u]:
-            if dist[pair_v[v]] == dist[u] + 1:
-                if dfs(pair_v[v], E, pair_u, pair_v, dist):
-                    pair_v[v] = u
-                    pair_u[u] = v
-                    return True
-
-        dist[u] = INF
+def is_prime(n):
+    if n == 1:
         return False
-    else:
-        return True
+
+    i = 2
+    while i*i <= n:
+        if n % i == 0:
+            return False
+        i += 1
+
+    return True
 
 
-def hopcraft_karp(U, V, E):
-    pair_u = {}
-    pair_v = {}
-    dist = defaultdict(lambda: INF)
+def gen_primes():
+    D = {}
 
-    for u in U:
-        pair_u[u] = None
-    for v in V:
-        pair_v[v] = None
+    q = 2
 
-    matching = 0
-    while bfs(U, V, E, pair_u, pair_v, dist):
-        for u in U:
-            if pair_u[u] is None:
-                if dfs(u, E, pair_u, pair_v, dist):
+    while True:
+        if q not in D:
+            yield q
+            D[q * q] = [q]
+        else:
+            for p in D[q]:
+                D.setdefault(p + q, []).append(p)
+            del D[q]
 
-                    matching += 1
-    return matching
+        q += 1
+
+
+def gen_edges(n, a):
+    E = defaultdict(set)
+    t = set(range(n))
+
+    count = 0
+    flag = False
+    for p in gen_primes():
+        new_t = set()
+        for i in t:
+            if a[i] % p == 0:
+                E[p].add(i)
+            else:
+                new_t.add(i)
+
+            t = new_t
+
+        if not t:
+            break
+
+        count += 1
+        if count >= 100 and not flag:
+            flag = True
+            new_t = set()
+
+            for i in t:
+                if is_prime(a[i]):
+                    E[a[i]].add(i)
+                else:
+                    new_t.add(i)
+            t = new_t
+
+
+    return E
 
 
 def computer_game(n, a, b):
-    U = range(n)
-    V = range(n)
-    E = defaultdict(set)
-
-    for i, p in enumerate(a):
-        for j, q in enumerate(b):
-            if gcd(p, q) != 1:
-                E[i].add(j)
-
-    result = hopcraft_karp(U, V, E)
-    print(result)
+    E = gen_edges(n, a)
+    print('done')
 
 
 if __name__ == '__main__':
