@@ -8,7 +8,7 @@ from fractions import *
 
 def trial_division(n):
     a = set()
-    
+
     while n % 2 == 0:
         a.add(2)
         n /= 2
@@ -64,8 +64,7 @@ def bfs(graph, saturated_edges, s, t, parent):
     return t in visited
 
 
-def ford_fulkerson(graph, source, sink):
-    saturated_edges = set()
+def ford_fulkerson(graph, saturated_edges, source, sink):
     parent = {}
 
     max_flow = 0
@@ -89,12 +88,15 @@ def computer_game(n, A, B):
     end_node = -2
 
     graph = defaultdict(set)
+    saturated_edges = set()
     prime_nodes_map = {}
 
     a_node_counter = 0
     p_node_counter = 100000
     for value in A:
         graph[start_node].add(a_node_counter)
+        graph[a_node_counter].add(start_node)
+        saturated_edges.add((a_node_counter, start_node))
 
         factors = trial_division(value)
         for p in factors:
@@ -102,13 +104,18 @@ def computer_game(n, A, B):
                 prime_nodes_map[p] = p_node_counter
                 p_node_counter += 1
 
-            graph[a_node_counter].add(prime_nodes_map[p])
+            p_node = prime_nodes_map[p]
+            graph[a_node_counter].add(p_node)
+            graph[p_node].add(a_node_counter)
+            saturated_edges.add((p_node, a_node_counter))
 
         a_node_counter += 1
 
     b_node_counter = 300000
     for value in B:
         graph[b_node_counter].add(end_node)
+        graph[end_node].add(b_node_counter)
+        saturated_edges.add((end_node, b_node_counter))
 
         factors = trial_division(value)
         for p in factors:
@@ -116,12 +123,15 @@ def computer_game(n, A, B):
                 prime_nodes_map[p] = p_node_counter
                 p_node_counter += 1
 
-            graph[prime_nodes_map[p]].add(b_node_counter)
+            p_node = prime_nodes_map[p]
+            graph[p_node].add(b_node_counter)
+            graph[b_node_counter].add(p_node)
+            saturated_edges.add((b_node_counter, p_node))
 
         b_node_counter += 1
 
     print(graph)
-    result = ford_fulkerson(graph, start_node, end_node)
+    result = ford_fulkerson(graph, saturated_edges, start_node, end_node)
     print(result)
 
 
