@@ -45,41 +45,52 @@ def gen_primes():
         q += 1
 
 
-def bfs(graph, saturated_edges, s, t, parent):
-    visited = set()
+def bfs(graph, saturated_edges, level, s, t):  # C is the capacity matrix
     queue = deque()
 
     queue.append(s)
-    visited.add(s)
+
+    level.clear()
+    level[s] = 1
 
     while queue:
         u = queue.popleft()
 
         for v in graph[u]:
-            if (v not in visited) and ((u,v) not in saturated_edges):
+            if level[v] == 0 and ((u,v) not in saturated_edges):
+                level[v] = level[u] + 1
                 queue.append(v)
-                visited.add(v)
-                parent[v] = u
 
-    return t in visited
+    return level[t] > 0
 
 
-def ford_fulkerson(graph, saturated_edges, source, sink):
-    parent = {}
+def dfs(graph, saturated_edges, level, u, s, t):
+    if u == t:
+        return 1
 
-    max_flow = 0
+    for v in graph[u]:
+        if (level[v] == level[u] + 1) and ((u,v) not in saturated_edges):
+            f = dfs(graph, saturated_edges, level, v, s, t)
+            if f > 0:
+                saturated_edges.add((u,v))
+                saturated_edges.discard((v,u))
+                return f
 
-    while bfs(graph, saturated_edges, source, sink, parent):
-        max_flow += 1
+    return 0
 
-        v = sink
-        while v != source:
-            u = parent[v]
-            saturated_edges.add((u, v))
-            saturated_edges.discard((v, u))
-            v = parent[v]
 
-    return max_flow
+def max_flow(graph, saturated_edges, s, t):
+    level = defaultdict(lambda: 0)
+
+    flow = 0
+    while bfs(graph, saturated_edges, level, s, t):
+        f = dfs(graph, saturated_edges, level, s, s, t)
+
+        while f > 0:
+            flow += f
+            f = dfs(graph, saturated_edges, level, s, s, t)
+
+    return flow
 
 
 def computer_game(n, A, B):
@@ -130,8 +141,7 @@ def computer_game(n, A, B):
 
         b_node_counter += 1
 
-    print(graph)
-    result = ford_fulkerson(graph, saturated_edges, start_node, end_node)
+    result = max_flow(graph, saturated_edges, start_node, end_node)
     print(result)
 
 
