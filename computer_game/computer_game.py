@@ -70,9 +70,12 @@ def dfs(graph, ptr, cap_edges, level, u, s, t):
     adj = graph[u]
     ind = ptr[u]
 
-    for i in range(ind, len(adj)):
+    i = ind
+    n = len(adj)
+    while i < n:
         v, eid, eid_b = adj[i]
         ptr[u] = i
+        i += 1
         
         if (level[v] == level[u] + 1) and cap_edges[eid] > 0:
             f = dfs(graph, ptr, cap_edges, level, v, s, t)
@@ -104,6 +107,7 @@ def max_flow(graph, cap_edges, s, t):
 
 
 def computer_game(n, A, B):
+
     start_node = 0
     end_node = 1
 
@@ -163,6 +167,8 @@ def computer_game(n, A, B):
             cap_edges.append(0)
             edges_count += 2
 
+    print(len(cap_edges))
+    print(node_count)
     result = max_flow(graph, cap_edges, start_node, end_node)
     print(result)
 
