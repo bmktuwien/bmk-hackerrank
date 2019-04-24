@@ -24,6 +24,7 @@ def gen_primes():
 
         q += 1
 
+
 def power(x, y, p):
     res = 1
 
@@ -33,7 +34,7 @@ def power(x, y, p):
             res = (res * x) % p
 
         y = y>>1
-        x = (x * x) % p;
+        x = (x * x) % p
 
     return res
 
@@ -59,6 +60,12 @@ def miller_test(d, n):
 
 
 def is_prime(n, k):
+    if n == 4:
+        return False
+    
+    if n <= 3:
+        return True
+
     d = n - 1
     while d % 2 == 0:
         d //= 2
