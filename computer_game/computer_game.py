@@ -3,29 +3,9 @@
 #!/bin/python
 
 from collections import *
+import random
+import itertools
 from fractions import *
-
-
-def trial_division(n):
-    a = set()
-
-    while n % 2 == 0:
-        a.add(2)
-        n /= 2
-
-    f = 3
-
-    while f * f <= n:
-        if n % f == 0:
-            a.add(f)
-            n /= f
-        else:
-            f += 2
-
-    if n != 1:
-        a.add(n)
-
-    return a
 
 
 def gen_primes():
@@ -43,6 +23,77 @@ def gen_primes():
             del D[q]
 
         q += 1
+
+def power(x, y, p):
+    res = 1
+
+    x = x % p
+    while y > 0:
+        if y & 1:
+            res = (res * x) % p
+
+        y = y>>1
+        x = (x * x) % p;
+
+    return res
+
+
+def miller_test(d, n):
+    a = 2 + random.randint(1, n - 4)
+
+    x = power(a, d, n)
+
+    if x == 1 or x == n - 1:
+        return True
+
+    while d != n - 1:
+        x = (x * x) % n
+        d *= 2
+
+        if x == 1:
+            return False
+        if x == n - 1:
+            return True
+
+    return False
+
+
+def is_prime(n, k):
+    d = n - 1
+    while d % 2 == 0:
+        d //= 2
+
+    for i in range(k):
+        if not miller_test(d, n):
+            return False
+
+    return True
+
+
+def trial_division(n):
+    a = set()
+
+    while n % 2 == 0:
+        a.add(2)
+        n /= 2
+
+    f = 3
+
+    if is_prime(n, 1):
+        a.add(n)
+        return a
+
+    while f * f <= n:
+        if n % f == 0:
+            a.add(f)
+            n /= f
+        else:
+            f += 2
+
+    if n != 1:
+        a.add(n)
+
+    return a
 
 
 def bfs(graph, cap_edges, level, s, t):  # C is the capacity matrix
