@@ -45,103 +45,119 @@ def gen_primes():
         q += 1
 
 
-def bfs(graph, saturated_edges, level, s, t):  # C is the capacity matrix
+def bfs(graph, cap_edges, level, s, t):  # C is the capacity matrix
     queue = deque()
 
     queue.append(s)
 
-    level.clear()
     level[s] = 1
 
     while queue:
         u = queue.popleft()
 
-        for v in graph[u]:
-            if level[v] == 0 and ((u,v) not in saturated_edges):
+        for v, eid, _ in graph[u]:
+            if level[v] == 0 and cap_edges[eid] > 0:
                 level[v] = level[u] + 1
                 queue.append(v)
 
     return level[t] > 0
 
 
-def dfs(graph, saturated_edges, level, u, s, t):
+def dfs(graph, cap_edges, level, u, s, t):
     if u == t:
         return 1
 
-    for v in graph[u]:
-        if (level[v] == level[u] + 1) and ((u,v) not in saturated_edges):
-            f = dfs(graph, saturated_edges, level, v, s, t)
+    for v, eid, eid_b in graph[u]:
+        if (level[v] == level[u] + 1) and cap_edges[eid] > 0:
+            f = dfs(graph, cap_edges, level, v, s, t)
             if f > 0:
-                saturated_edges.add((u,v))
-                saturated_edges.discard((v,u))
+                cap_edges[eid] -= 1
+                cap_edges[eid_b] += 1
                 return f
 
     return 0
 
 
-def max_flow(graph, saturated_edges, s, t):
-    level = defaultdict(lambda: 0)
+def max_flow(graph, cap_edges, s, t):
+    n = len(graph)
+    level = [0] * n
 
     flow = 0
-    while bfs(graph, saturated_edges, level, s, t):
-        f = dfs(graph, saturated_edges, level, s, s, t)
+    while bfs(graph, cap_edges, level, s, t):
+        f = dfs(graph, cap_edges, level, s, s, t)
 
         while f > 0:
             flow += f
-            f = dfs(graph, saturated_edges, level, s, s, t)
+            f = dfs(graph, cap_edges, level, s, s, t)
 
+        level = [0] * n
     return flow
 
 
 def computer_game(n, A, B):
 
-    start_node = -1
-    end_node = -2
+    start_node = 0
+    end_node = 1
 
-    graph = defaultdict(set)
-    saturated_edges = set()
+    graph = defaultdict(list)
+    cap_edges = []
+    node_count = 2
+    edges_count = 0
     prime_nodes_map = {}
 
-    a_node_counter = 0
-    p_node_counter = 100000
     for value in A:
-        graph[start_node].add(a_node_counter)
-        graph[a_node_counter].add(start_node)
-        saturated_edges.add((a_node_counter, start_node))
+        current_node = node_count
+
+        graph[start_node].append((current_node, edges_count, edges_count+1))
+        cap_edges.append(1)
+        graph[current_node].append((start_node, edges_count+1, edges_count))
+        cap_edges.append(0)
+        edges_count += 2
+        node_count += 1
 
         factors = trial_division(value)
+
         for p in factors:
             if p not in prime_nodes_map:
-                prime_nodes_map[p] = p_node_counter
-                p_node_counter += 1
+                prime_nodes_map[p] = node_count
+                node_count += 1
 
             p_node = prime_nodes_map[p]
-            graph[a_node_counter].add(p_node)
-            graph[p_node].add(a_node_counter)
-            saturated_edges.add((p_node, a_node_counter))
+            graph[current_node].append((p_node, edges_count, edges_count+1))
+            cap_edges.append(1)
 
-        a_node_counter += 1
+            graph[p_node].append((current_node, edges_count+1, edges_count))
+            cap_edges.append(0)
+            edges_count += 2
 
-    b_node_counter = 300000
     for value in B:
-        graph[b_node_counter].add(end_node)
-        graph[end_node].add(b_node_counter)
-        saturated_edges.add((end_node, b_node_counter))
+        current_node = node_count
+
+        graph[current_node].append((end_node, edges_count, edges_count+1))
+        cap_edges.append(1)
+
+        graph[end_node].append((current_node, edges_count+1, edges_count))
+        cap_edges.append(0)
+        edges_count += 2
+        node_count += 1
 
         factors = trial_division(value)
         for p in factors:
             if p not in prime_nodes_map:
-                prime_nodes_map[p] = p_node_counter
-                p_node_counter += 1
+                prime_nodes_map[p] = node_count
+                node_count += 1
 
             p_node = prime_nodes_map[p]
-            graph[p_node].add(b_node_counter)
-            graph[b_node_counter].add(p_node)
-            saturated_edges.add((b_node_counter, p_node))
+            graph[p_node].append((current_node, edges_count, edges_count+1))
+            cap_edges.append(1)
 
-        b_node_counter += 1
+            graph[current_node].append((p_node, edges_count+1, edges_count))
+            cap_edges.append(0)
+            edges_count += 2
 
-    result = max_flow(graph, saturated_edges, start_node, end_node)
+    print(len(cap_edges))
+    print(node_count)
+    result = max_flow(graph, cap_edges, start_node, end_node)
     print(result)
 
 
