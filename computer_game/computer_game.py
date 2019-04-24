@@ -4,9 +4,6 @@
 
 from collections import *
 import random
-import itertools
-from fractions import *
-
 
 def gen_primes():
     D = {}
@@ -25,6 +22,10 @@ def gen_primes():
         q += 1
 
 
+prime_gen = gen_primes()
+primes = [next(prime_gen) for _ in xrange(3500)]
+
+
 def power(x, y, p):
     res = 1
 
@@ -33,7 +34,7 @@ def power(x, y, p):
         if y & 1:
             res = (res * x) % p
 
-        y = y>>1
+        y = y >> 1
         x = (x * x) % p
 
     return res
@@ -62,13 +63,13 @@ def miller_test(d, n):
 def is_prime(n, k):
     if n == 4:
         return False
-    
+
     if n <= 3:
         return True
 
     d = n - 1
     while d % 2 == 0:
-        d //= 2
+        d /= 2
 
     for i in range(k):
         if not miller_test(d, n):
@@ -84,18 +85,19 @@ def trial_division(n):
         a.add(2)
         n /= 2
 
-    f = 3
-
-    if is_prime(n, 1):
-        a.add(n)
-        return a
+    i = 1
+    f = primes[i]
 
     while f * f <= n:
         if n % f == 0:
             a.add(f)
             n /= f
         else:
-            f += 2
+            if i == 30 and is_prime(n, 1):
+                break
+
+            i += 1
+            f = primes[i]
 
     if n != 1:
         a.add(n)
@@ -134,7 +136,7 @@ def dfs(graph, ptr, cap_edges, level, u, s, t):
         v, eid, eid_b = adj[i]
         ptr[u] = i
         i += 1
-        
+
         if (level[v] == level[u] + 1) and cap_edges[eid] > 0:
             f = dfs(graph, ptr, cap_edges, level, v, s, t)
             if f > 0:
@@ -160,7 +162,7 @@ def max_flow(graph, cap_edges, s, t):
 
         level = [0] * n
         ptr = [0] * n
-        
+
     return flow
 
 
