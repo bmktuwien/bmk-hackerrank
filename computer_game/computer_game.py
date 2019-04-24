@@ -63,13 +63,19 @@ def bfs(graph, cap_edges, level, s, t):  # C is the capacity matrix
     return level[t] > 0
 
 
-def dfs(graph, cap_edges, level, u, s, t):
+def dfs(graph, ptr, cap_edges, level, u, s, t):
     if u == t:
         return 1
 
-    for v, eid, eid_b in graph[u]:
+    adj = graph[u]
+    ind = ptr[u]
+
+    for i in range(ind, len(adj)):
+        v, eid, eid_b = adj[i]
+        ptr[u] = i
+        
         if (level[v] == level[u] + 1) and cap_edges[eid] > 0:
-            f = dfs(graph, cap_edges, level, v, s, t)
+            f = dfs(graph, ptr, cap_edges, level, v, s, t)
             if f > 0:
                 cap_edges[eid] -= 1
                 cap_edges[eid_b] += 1
@@ -81,21 +87,23 @@ def dfs(graph, cap_edges, level, u, s, t):
 def max_flow(graph, cap_edges, s, t):
     n = len(graph)
     level = [0] * n
+    ptr = [0] * n
 
     flow = 0
     while bfs(graph, cap_edges, level, s, t):
-        f = dfs(graph, cap_edges, level, s, s, t)
+        f = dfs(graph, ptr, cap_edges, level, s, s, t)
 
         while f > 0:
             flow += f
-            f = dfs(graph, cap_edges, level, s, s, t)
+            f = dfs(graph, ptr, cap_edges, level, s, s, t)
 
         level = [0] * n
+        ptr = [0] * n
+        
     return flow
 
 
 def computer_game(n, A, B):
-
     start_node = 0
     end_node = 1
 
@@ -155,8 +163,6 @@ def computer_game(n, A, B):
             cap_edges.append(0)
             edges_count += 2
 
-    print(len(cap_edges))
-    print(node_count)
     result = max_flow(graph, cap_edges, start_node, end_node)
     print(result)
 
