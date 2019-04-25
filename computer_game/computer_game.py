@@ -3,7 +3,6 @@
 #!/bin/python
 
 from collections import *
-import random
 
 
 def gen_primes():
@@ -22,63 +21,12 @@ def gen_primes():
         q += 1
 
 
-# precompute some prime numbers to speed up trial division factorization
+# precompute prime numbers smaller than sqrt(10**9)
 prime_gen = gen_primes()
 primes = [next(prime_gen) for _ in xrange(3500)]
 
 
-def power(x, y, p):
-    res = 1
-
-    x = x % p
-    while y > 0:
-        if y & 1:
-            res = (res * x) % p
-
-        y = y >> 1
-        x = (x * x) % p
-
-    return res
-
-
-def miller_test(d, n):
-    a = 2 + random.randint(1, n - 4)
-
-    x = power(a, d, n)
-
-    if x == 1 or x == n - 1:
-        return True
-
-    while d != n - 1:
-        x = (x * x) % n
-        d *= 2
-
-        if x == 1:
-            return False
-        if x == n - 1:
-            return True
-
-    return False
-
-
-def is_prime(n, k):
-    if n == 4:
-        return False
-
-    if n <= 3:
-        return True
-
-    d = n - 1
-    while d % 2 == 0:
-        d /= 2
-
-    for i in range(k):
-        if not miller_test(d, n):
-            return False
-
-    return True
-
-
+# enhanced trial division method using precomputed prime numbers
 def trial_division(n):
     a = set()
 
@@ -89,15 +37,11 @@ def trial_division(n):
     i = 1
     f = primes[i]
 
-    # iterate through precomputed prime numbers
     while f * f <= n:
         if n % f == 0:
             a.add(f)
             n /= f
         else:
-            if i == 30 and is_prime(n, 1):
-                break
-
             i += 1
             f = primes[i]
 
@@ -109,7 +53,6 @@ def trial_division(n):
 
 def bfs(graph, cap_edges, level, s, t):
     queue = deque()
-
     queue.append(s)
 
     level[s] = 1
@@ -149,7 +92,7 @@ def dfs(graph, ptr, cap_edges, level, u, s, t):
     return 0
 
 
-# solve the max-flow problem using Dinic algorithm
+# solve the max-flow problem using the Dinic algorithm
 def max_flow(graph, cap_edges, s, t):
     n = len(graph)
     level = [0] * n
@@ -242,4 +185,3 @@ if __name__ == '__main__':
     b = map(int, raw_input().rstrip().split())
 
     computer_game(n, a, b)
-
