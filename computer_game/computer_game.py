@@ -8,7 +8,6 @@ import random
 
 def gen_primes():
     D = {}
-
     q = 2
 
     while True:
