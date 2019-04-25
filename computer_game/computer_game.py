@@ -5,6 +5,7 @@
 from collections import *
 import random
 
+
 def gen_primes():
     D = {}
 
@@ -22,6 +23,7 @@ def gen_primes():
         q += 1
 
 
+# precompute some prime numbers to speed up trial division factorization
 prime_gen = gen_primes()
 primes = [next(prime_gen) for _ in xrange(3500)]
 
@@ -88,6 +90,7 @@ def trial_division(n):
     i = 1
     f = primes[i]
 
+    # iterate through precomputed prime numbers
     while f * f <= n:
         if n % f == 0:
             a.add(f)
@@ -105,7 +108,7 @@ def trial_division(n):
     return a
 
 
-def bfs(graph, cap_edges, level, s, t):  # C is the capacity matrix
+def bfs(graph, cap_edges, level, s, t):
     queue = deque()
 
     queue.append(s)
@@ -147,6 +150,7 @@ def dfs(graph, ptr, cap_edges, level, u, s, t):
     return 0
 
 
+# solve the max-flow problem using Dinic algorithm
 def max_flow(graph, cap_edges, s, t):
     n = len(graph)
     level = [0] * n
@@ -227,8 +231,6 @@ def computer_game(n, A, B):
             cap_edges.append(0)
             edges_count += 2
 
-    print(len(cap_edges))
-    print(node_count)
     result = max_flow(graph, cap_edges, start_node, end_node)
     print(result)
 
