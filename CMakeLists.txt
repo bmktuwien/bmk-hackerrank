@@ -41,3 +41,7 @@ add_executable(min_max_riddle min_max_riddle/solution.cc)
 ################################################################################
 
 add_executable(computer_game computer_game/solution.cc)
+
+################################################################################
+
+add_executable(mission_points mission_points/solution.cc)
