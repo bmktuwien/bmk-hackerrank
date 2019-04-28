@@ -16,7 +16,7 @@ class CompressedSegmentationTree {
 public:
     void build(const vector<int>& v) {
         _n = v.size();
-        _t.resize(_n*4);
+        _t.resize(_n*4, 0);
 
         for (int i = 0; i < v.size(); i++) {
             _m[v[i]] = i;
@@ -58,8 +58,9 @@ private:
             _t[v] = max(_t[v*2], _t[v*2+1]);
         }
     }
+
     long _get_max(int v, int tl, int tr, int l, int r) {
-        if (l > r || tl > tr) {
+        if (l > r) {
             return 0;
 
         }
@@ -82,21 +83,21 @@ class SegmentationTree2D {
 public:
     explicit SegmentationTree2D(const vector<pair<int,int>>& points, int max_n)
             : _max_n(max_n){
-        _t.resize(max_n*4);
-        _build(points, 1, 0, max_n-1);
+        _t.resize((max_n+1)*4);
+        _build(points, 1, 1, max_n);
     }
 
     void update(int x, int y, long new_val) {
-        _update(1, 0, _max_n-1, x, y, new_val);
+        _update(1, 1, _max_n, x, y, new_val);
     }
 
     long get_max(int x1, int y1, int x2, int y2) {
-        return _get_max(1, 0, _max_n-1, x1, y1, x2, y2);
+        return _get_max(1, 1, _max_n, x1, y1, x2, y2);
     }
 
 private:
     long _get_max(int v, int tl, int tr, int x1, int y1, int x2, int y2) {
-        if (x1 > x2 || tl > tr) {
+        if (x1 > x2) {
             return 0;
         }
 
@@ -171,12 +172,11 @@ void solve(int n, int d_lat, int d_long, vector<City>& cities) {
 
     long result = 0;
     for (const City& c : cities) {
-        int x1 = max(0, c.latitude - d_lat);
-        int y1 = max(0, c.longitude - d_long);
-        int x2 = c.latitude + d_lat;
-        int y2 = c.longitude + d_long;
+        int x1 = max(1, c.latitude - d_lat);
+        int y1 = max(1, c.longitude - d_long);
+        int x2 = min(c.latitude + d_lat, 200000);
+        int y2 = min(c.longitude + d_long, 200000);
 
-        //cout << "looking up: " << x1 << "," << y1 << "," << x2 << "," << y2 << endl;
         long max_points = seg_tree.get_max(x1, y1, x2, y2);
         max_points += c.point;
         seg_tree.update(c.latitude, c.longitude, max_points);
