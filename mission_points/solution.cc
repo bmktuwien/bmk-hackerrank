@@ -92,17 +92,22 @@ public:
     }
 
     long get_max(int x1, int y1, int x2, int y2) {
+        //cout << "crap: " << x1 << " - " << x2 << endl;
         return _get_max(1, 1, _max_n, x1, y1, x2, y2);
     }
 
 private:
     long _get_max(int v, int tl, int tr, int x1, int y1, int x2, int y2) {
+        //cout << "fuck: " << tl << " - " << tr << endl;
         if (x1 > x2) {
+            //cout << "break!!!" << endl;
             return 0;
         }
 
         if (x1 == tl && x2 == tr) {
-            return _t[v].get_max(y1, y2);
+            //cout << "bingo!!!" << endl;
+            //return _t[v].get_max(y1, y2);
+            return tl-x1;
         }
         int tm = (tl + tr) / 2;
         return max(_get_max(v*2, tl, tm, x1, y1, min(x2, tm), y2),
@@ -118,8 +123,7 @@ private:
 
             if (x <= tm) {
                 _update(v*2, tl, tm, x, y, new_val);
-            }
-            else {
+            } else {
                 _update(v*2+1, tm+1, tr, x, y, new_val);
             }
         }
@@ -179,6 +183,7 @@ void solve(int n, int d_lat, int d_long, vector<City>& cities) {
 
         long max_points = seg_tree.get_max(x1, y1, x2, y2);
         max_points += c.point;
+
         seg_tree.update(c.latitude, c.longitude, max_points);
 
         if (max_points > result) {
