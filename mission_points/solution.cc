@@ -12,152 +12,213 @@ struct City {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class CompressedSegmentationTree {
-public:
-    void build(const vector<int>& v) {
-        _n = v.size();
-        _t.resize(_n*4, 0);
-
-        for (int i = 0; i < v.size(); i++) {
-            _m[v[i]] = i;
-        }
-    }
-
-    void update(int pos, long val) {
-        pos = _m[pos];
-
-        _update(1, 0, _n-1, pos, val);
-    }
-
-    long get_max(int pos_l, int pos_r) {
-        auto it_l = _m.lower_bound(pos_l);
-        auto it_r = _m.upper_bound(pos_r);
-
-        if (it_r == it_l) {
-            return 0;
-        }
-
-        if (it_r != _m.begin()) {
-            it_r--;
-        }
-
-        return _get_max(1, 0, _n-1, (*it_l).second, (*it_r).second);
-    }
-
-private:
-    void _update(int v, int tl, int tr, int pos, long new_val) {
-        if (tl == tr) {
-            _t[v] = max(_t[v], new_val);
-        } else {
-            int tm = (tl + tr) / 2;
-            if (pos <= tm)
-                _update(v*2, tl, tm, pos, new_val);
-            else
-                _update(v*2+1, tm+1, tr, pos, new_val);
-
-            _t[v] = max(_t[v*2], _t[v*2+1]);
-        }
-    }
-
-    long _get_max(int v, int tl, int tr, int l, int r) {
-        if (l > r) {
-            return 0;
-
-        }
-        if (l == tl && r == tr) {
-            return _t[v];
-        }
-        int tm = (tl + tr) / 2;
-        return max(_get_max(v*2, tl, tm, l, min(r, tm)),
-                   _get_max(v*2+1, tm+1, tr, max(l, tm+1), r));
-    }
-
-    size_t _n = 0;
-    map<int, int> _m;
-    vector<long> _t;
+template<typename T>
+struct Node {
+    int key;
+    Node *left;
+    Node *right;
+    int height;
+    T value;
 };
+
+template<typename T>
+int height(Node<T> *N) {
+    if (N == nullptr)
+        return 0;
+
+    return N->height;
+}
+
+template<typename T>
+Node<T>* newNode(int key, T def) {
+    auto* node = new Node<T>();
+    node->key = key;
+    node->left = nullptr;
+    node->right = nullptr;
+    node->height = 1; // new node is initially
+    node->value = def;
+
+    // added at leaf
+    return(node);
+}
+
+template<typename T>
+Node<T> *rightRotate(Node<T> *y) {
+    Node<T> *x = y->left;
+    Node<T> *T2 = x->right;
+
+    // Perform rotation
+    x->right = y;
+    y->left = T2;
+
+    // Update heights
+    y->height = max(height(y->left),
+                    height(y->right)) + 1;
+    x->height = max(height(x->left),
+                    height(x->right)) + 1;
+
+    // Return new root
+    return x;
+}
+
+template<typename T>
+Node<T> *leftRotate(Node<T> *x) {
+    Node<T> *y = x->right;
+    Node<T> *T2 = y->left;
+
+    // Perform rotation
+    y->left = x;
+    x->right = T2;
+
+    // Update heights
+    x->height = max(height(x->left),
+                    height(x->right)) + 1;
+    y->height = max(height(y->left),
+                    height(y->right)) + 1;
+
+    // Return new root
+    return y;
+}
+
+template<typename T>
+int getBalance(Node<T> *N) {
+    if (N == nullptr)
+        return 0;
+    return height(N->left) - height(N->right);
+}
+
+template<typename T, typename Functor>
+Node<T>* insert(Node<T>* node, int key, T def, Functor&& f) {
+    if (node == nullptr) {
+        node = newNode<T>(key, def);
+    }
+
+    // apply function f to value
+    node->value = f(node->value);
+
+    if (key < node->key)
+        node->left = insert(node->left, key, def, f);
+    else if (key > node->key)
+        node->right = insert(node->right, key, def, f);
+    else // Equal keys are not allowed in BST
+        return node;
+
+    node->height = 1 + max(height(node->left),
+                           height(node->right));
+
+    int balance = getBalance<T>(node);
+
+    // Left Left Case
+    if (balance > 1 && key < node->left->key)
+        return rightRotate(node);
+
+    // Right Right Case
+    if (balance < -1 && key > node->right->key)
+        return leftRotate(node);
+
+    // Left Right Case
+    if (balance > 1 && key > node->left->key)
+    {
+        node->left = leftRotate(node->left);
+        return rightRotate(node);
+    }
+
+    // Right Left Case
+    if (balance < -1 && key < node->right->key)
+    {
+        node->right = rightRotate(node->right);
+        return leftRotate(node);
+    }
+
+    return node;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class SegmentationTree2D {
-public:
-    explicit SegmentationTree2D(const vector<pair<int,int>>& points, int max_n)
-            : _max_n(max_n){
-        _t.resize((max_n+1)*4);
-        _build(points, 1, 1, max_n);
+long get_max_y(Node<long> *node, int l, int r) {
+    while (node != nullptr && l < node->key && r < node->key) {
+        node = node->left;
     }
 
-    void update(int x, int y, long new_val) {
-        _update(1, 1, _max_n, x, y, new_val);
+    while (node != nullptr && l > node->key && r > node->key) {
+        node = node->right;
     }
 
-    long get_max(int x1, int y1, int x2, int y2) {
-        //cout << "crap: " << x1 << " - " << x2 << endl;
-        return _get_max(1, 1, _max_n, x1, y1, x2, y2);
+    long result = 0;
+    if (node == nullptr) {
+        return result;
     }
 
-private:
-    long _get_max(int v, int tl, int tr, int x1, int y1, int x2, int y2) {
-        //cout << "fuck: " << tl << " - " << tr << endl;
-        if (x1 > x2) {
-            //cout << "break!!!" << endl;
-            return 0;
+    result = node->value;
+
+    Node<long> *node_l = node->left;
+    while (node_l != nullptr && node_l->key >= l) {
+        if (node_l->value > result) {
+            result = node_l->value;
+        }
+        node_l = node_l->left;
+    }
+
+    Node<long> *node_r = node->right;
+    while (node_r != nullptr && node_r->key <= r) {
+        if (node_r->value > result) {
+            result = node_r->value;
+        }
+        node_r = node_r->right;
+    }
+
+    return result;
+}
+
+long get_max(Node<Node<long> *> *node, int xl, int xr, int yl, int yr) {
+    while (node != nullptr && xl < node->key && xr < node->key) {
+        node = node->left;
+    }
+
+    while (node != nullptr && xl > node->key && xr > node->key) {
+        node = node->right;
+    }
+
+    long result = 0;
+    if (node == nullptr) {
+        return result;
+    }
+
+    result = get_max_y(node->value, yl, yr);
+
+    Node<Node<long>*> *node_l = node->left;
+    while (node_l != nullptr && node_l->key >= xl) {
+        long l = get_max_y(node_l->value, yl, yr);
+        if (l > result) {
+            result = l;
+        }
+        node_l = node_l->left;
+    }
+
+    Node<Node<long>*> *node_r = node->right;
+    while (node_r != nullptr && node_r->key <= xr) {
+        long l = get_max_y(node_r->value, yl, yr);
+        if (l > result) {
+            result = l;
         }
 
-        if (x1 == tl && x2 == tr) {
-            //cout << "bingo!!!" << endl;
-            //return _t[v].get_max(y1, y2);
-            return tl-x1;
-        }
-        int tm = (tl + tr) / 2;
-        return max(_get_max(v*2, tl, tm, x1, y1, min(x2, tm), y2),
-                   _get_max(v*2+1, tm+1, tr, max(x1, tm+1), y1, x2, y2));
+        node_r = node_r->right;
     }
+}
 
-    void _update(int v, int tl, int tr, int x, int y, long new_val) {
-        if (tl == tr) {
-            _t[v].update(y, new_val);
-        } else {
-            int tm = (tl + tr) / 2;
-            _t[v].update(y, new_val);
+Node<Node<long>*> *update(Node<Node<long>*> *node, int x, int y, long value) {
+    auto lambda_y = [&](long v2) {
+        return max(value, v2);
+    };
 
-            if (x <= tm) {
-                _update(v*2, tl, tm, x, y, new_val);
-            } else {
-                _update(v*2+1, tm+1, tr, x, y, new_val);
-            }
-        }
-    }
+    auto lambda_x = [&](Node<long> *node) {
+        return insert(node, y, 0L, lambda_y);
+    };
 
-    void _build(const vector<pair<int,int>>& points, int v, int tl, int tr) {
-        vector<int> ys;
-        for (auto &p : points) {
-            ys.push_back(p.second);
-        }
-        sort(ys.begin(), ys.end());
+    Node<long> *def = nullptr;
 
-        if (tl == tr) {
-            _t[v].build(ys);
-        } else {
-            int tm = (tl + tr) / 2;
-            vector<pair<int,int>> points_l, points_r;
-            for (auto &p : points) {
-                if (p.first <= tm) {
-                    points_l.push_back(p);
-                } else {
-                    points_r.push_back(p);
-                }
-            }
-
-            _t[v].build(ys);
-            _build(points_l, v*2, tl, tm);
-            _build(points_r, v*2+1, tm+1, tr);
-        }
-    }
-
-    int _max_n;
-    vector<CompressedSegmentationTree> _t;
-};
+    return insert(node, x, def, lambda_x);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -166,32 +227,28 @@ void solve(int n, int d_lat, int d_long, vector<City>& cities) {
         return c1.height > c2.height;
     });
 
-    vector<pair<int,int>> points;
-    for (auto &c : cities) {
-        points.emplace_back(c.latitude, c.longitude);
-    }
-    sort(points.begin(), points.end());
-
-    SegmentationTree2D seg_tree(points, 200000);
+    Node<Node<long>*> *range_tree = nullptr;
 
     long result = 0;
-    for (const City& c : cities) {
-        int x1 = max(1, c.latitude - d_lat);
-        int y1 = max(1, c.longitude - d_long);
-        int x2 = min(c.latitude + d_lat, 200000);
-        int y2 = min(c.longitude + d_long, 200000);
 
-        long max_points = seg_tree.get_max(x1, y1, x2, y2);
+    for (auto &c : cities) {
+        int x1 = max(0, c.latitude - d_lat);
+        int y1 = max(0, c.longitude - d_long);
+        int x2 = c.latitude + d_lat;
+        int y2 = c.longitude + d_long;
+
+        long max_points = get_max(range_tree, x1, x2, y1, y2);
         max_points += c.point;
-
-        seg_tree.update(c.latitude, c.longitude, max_points);
 
         if (max_points > result) {
             result = max_points;
         }
+
+        range_tree = update(range_tree, c.latitude, c.longitude, max_points);
     }
 
     cout << result << endl;
+
 }
 
 int main(int argc, char **argv) {
