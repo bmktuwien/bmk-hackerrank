@@ -12,40 +12,36 @@ struct City {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template<typename T1, typename T2>
-struct Node {
-    int key;
-    Node *left;
-    Node *right;
-    int height;
-    T1 v1;
-    T2 v2;
+struct NodeY {
+    NodeY *left{nullptr};
+    NodeY *right{nullptr};
+    int height{1};
+    int key{-1};
+    long max{-1};
+    long value{-1};
 };
 
-template<typename T1, typename T2>
-int height(Node<T1,T2> *N) {
+struct NodeX {
+    NodeX *left{nullptr};
+    NodeX *right{nullptr};
+    int height{1};
+    int key{-1};
+    long y{-1};
+    long value{-1};
+    NodeY *yTree{nullptr};
+};
+
+
+template<typename Node>
+int height(Node *N) {
     if (N == nullptr)
         return 0;
 
     return N->height;
 }
 
-template<typename T1, typename T2>
-Node<T1,T2>* newNode(int key, T1 def1, T2 def2) {
-    auto* node = new Node<T1,T2>();
-    node->key = key;
-    node->left = nullptr;
-    node->right = nullptr;
-    node->height = 1; // new node is initially
-    node->v1 = def1;
-    node->v2 = def2;
-
-    // added at leaf
-    return(node);
-}
-
-template<typename T1,typename T2>
-Node<T1,T2> *rightRotate(Node<T1,T2> *y) {
+template<typename Node>
+Node *rightRotate(Node *y) {
     auto *x = y->left;
     auto *t2 = x->right;
 
@@ -63,8 +59,8 @@ Node<T1,T2> *rightRotate(Node<T1,T2> *y) {
     return x;
 }
 
-template<typename T1, typename T2>
-Node<T1,T2> *leftRotate(Node<T1,T2> *x) {
+template<typename Node>
+Node *leftRotate(Node *x) {
     auto *y = x->right;
     auto *t2 = y->left;
 
@@ -82,25 +78,73 @@ Node<T1,T2> *leftRotate(Node<T1,T2> *x) {
     return y;
 }
 
-template<typename T1, typename T2>
-int getBalance(Node<T1,T2> *N) {
-    if (N == nullptr)
+template<typename Node>
+int getBalance(Node *node) {
+    if (node == nullptr)
         return 0;
-    return height(N->left) - height(N->right);
+    return height(node->left) - height(node->right);
 }
 
-template<typename T1, typename T2, typename Functor>
-Node<T1,T2>* insert(Node<T1,T2>* node, int key, T1 def1, T2 def2, Functor f) {
+NodeY* insertY(NodeY* node, int y, long value) {
     if (node == nullptr) {
-        node = newNode<T1,T2>(key, def1, def2);
+        node = new NodeY();
+        node->key = y;
+        node->value = value;
+        node->max = value;
+        return node;
     }
 
-    node->v2 = f(node->v2);
+    node->max = max(node->max, value);
 
-    if (key < node->key) {
-        node->left = insert(node->left, key, def1, def2, f);
-    } else if (key > node->key) {
-        node->right = insert(node->right, key, def1, def2, f);
+    if (y < node->key) {
+        node->left = insertY(node->left, y, value);
+    } else if (y > node->key) {
+        node->right = insertY(node->right, y, value);
+    } else {
+       return node;
+    }
+
+    node->height = 1 + max(height(node->left),
+                           height(node->right));
+
+    int balance = getBalance(node);
+
+    // Left Left Case
+    if (balance > 1 && y < node->left->key)
+        return rightRotate(node);
+
+    // Right Right Case
+    if (balance < -1 && y > node->right->key)
+        return leftRotate(node);
+
+    // Left Right Case
+    if (balance > 1 && y > node->left->key) {
+        node->left = leftRotate(node->left);
+        return rightRotate(node);
+    }
+
+    // Right Left Case
+    if (balance < -1 && y < node->right->key) {
+        node->right = rightRotate(node->right);
+        return leftRotate(node);
+    }
+
+    return node;
+}
+
+NodeX* insertXPhase1(NodeX* node, int x, int y, long value) {
+    if (node == nullptr) {
+        node = new NodeX();
+        node->key = x;
+        node->y = y;
+        node->value = value;
+        return node;
+    }
+
+    if (x < node->key) {
+        node->left = insertXPhase1(node->left, x, y, value);
+    } else if (x > node->key) {
+        node->right = insertXPhase1(node->right, x, y, value);
     } else {
         return node;
     }
@@ -111,23 +155,21 @@ Node<T1,T2>* insert(Node<T1,T2>* node, int key, T1 def1, T2 def2, Functor f) {
     int balance = getBalance(node);
 
     // Left Left Case
-    if (balance > 1 && key < node->left->key)
+    if (balance > 1 && x < node->left->key)
         return rightRotate(node);
 
     // Right Right Case
-    if (balance < -1 && key > node->right->key)
+    if (balance < -1 && x > node->right->key)
         return leftRotate(node);
 
     // Left Right Case
-    if (balance > 1 && key > node->left->key)
-    {
+    if (balance > 1 && x > node->left->key) {
         node->left = leftRotate(node->left);
         return rightRotate(node);
     }
 
     // Right Left Case
-    if (balance < -1 && key < node->right->key)
-    {
+    if (balance < -1 && x < node->right->key) {
         node->right = rightRotate(node->right);
         return leftRotate(node);
     }
@@ -135,9 +177,23 @@ Node<T1,T2>* insert(Node<T1,T2>* node, int key, T1 def1, T2 def2, Functor f) {
     return node;
 }
 
+void insertXPhase2(NodeX* node, int x, int y, long value) {
+    while (node != nullptr) {
+        node->yTree = insertY(node->yTree, y, value);
+
+        if (x < node->key) {
+            node = node->left;
+        } else if (x > node->key) {
+            node = node->right;
+        } else {
+            return;
+        }
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
-long get_max_y(Node<long,long> *node, int l, int r) {
+long get_max_y(NodeY *node, int l, int r) {
     long result = 0;
     while (node != nullptr) {
         if (node->key < l) {
@@ -153,12 +209,12 @@ long get_max_y(Node<long,long> *node, int l, int r) {
         return result;
     }
 
-    result = node->v1;
+    result = node->value;
 
     auto *node_l = node->left;
     while (node_l != nullptr) {
         if (node_l->key >= l) {
-            long tmp = max(node_l->v1, node_l->right != nullptr ? node_l->right->v2 : 0L);
+            long tmp = max(node_l->value, node_l->right != nullptr ? node_l->right->max : 0L);
 
             if (tmp > result) {
                 result = tmp;
@@ -177,7 +233,7 @@ long get_max_y(Node<long,long> *node, int l, int r) {
     auto *node_r = node->right;
     while (node_r != nullptr) {
         if (node_r->key <= r) {
-            long tmp = max(node_r->v1, node_r->left != nullptr ? node_r->left->v2 : 0L);
+            long tmp = max(node_r->value, node_r->left != nullptr ? node_r->left->max : 0L);
 
             if (tmp > result) {
                 result = tmp;
@@ -196,7 +252,7 @@ long get_max_y(Node<long,long> *node, int l, int r) {
     return result;
 }
 
-long get_max(Node<pair<int,long>, Node<long,long>*> *node, int xl, int xr, int yl, int yr) {
+long get_max(NodeX *node, int xl, int xr, int yl, int yr) {
 
     long result = 0;
     while (node != nullptr) {
@@ -213,19 +269,18 @@ long get_max(Node<pair<int,long>, Node<long,long>*> *node, int xl, int xr, int y
         return result;
     }
 
-    if (yl <= node->v1.first && node->v1.first <= yr) {
-        result = node->v1.second;
+    if (yl <= node->y && node->y <= yr) {
+        result = node->value;
     }
 
     auto *node_l = node->left;
     while (node_l != nullptr) {
         if (node_l->key >= xl) {
-            auto ptr = node_l->right != nullptr ? node_l->right->v2 : nullptr;
-            long tmp = 0;
-            if (yl <= node_l->v1.first && node_l->v1.first <= yr) {
-                tmp = node_l->v1.second;
+            auto ptr = node_l->right != nullptr ? node_l->right->yTree : nullptr;
+            long tmp = get_max_y(ptr, yl, yr);
+            if (yl <= node_l->y && node_l->y <= yr && node_l->value > tmp) {
+                tmp = node_l->value;
             }
-            tmp = max(tmp, get_max_y(ptr, yl, yr));
 
             if (tmp > result) {
                 result = tmp;
@@ -239,18 +294,16 @@ long get_max(Node<pair<int,long>, Node<long,long>*> *node, int xl, int xr, int y
         } else {
             break;
         }
-
     }
 
     auto *node_r = node->right;
     while (node_r != nullptr ) {
         if (node_r->key <= xr) {
-            auto ptr = node_r->left != nullptr ? node_r->left->v2 : nullptr;
-            long tmp = 0;
-            if (yl <= node_r->v1.first && node_r->v1.first <= yr) {
-                tmp = node_r->v1.second;
+            auto ptr = node_r->left != nullptr ? node_r->left->yTree : nullptr;
+            long tmp = get_max_y(ptr, yl, yr);
+            if (yl <= node_r->y && node_r->y <= yr && node_r->value > tmp) {
+                tmp = node_r->value;
             }
-            tmp = max(tmp,  get_max_y(ptr, yl, yr));
 
             if (tmp > result) {
                 result = tmp;
@@ -269,39 +322,54 @@ long get_max(Node<pair<int,long>, Node<long,long>*> *node, int xl, int xr, int y
     return result;
 }
 
-Node<pair<int,long>, Node<long,long>*> *update(Node<pair<int,long>, Node<long,long>*> *node, int x, int y, long value) {
-    Node<long,long> *null_ptr = nullptr;
+void updateY(NodeY* node, int y, long value) {
+    while (node != nullptr) {
+        node->max = max(node->max, value);
 
-    auto f1 = [&value](long v) {
-        return max(value, v);
-    };
+        if (y < node->key) {
+            node = node->left;
+        } else if (y > node->key) {
+            node = node->right;
+        } else {
+            node->value = value;
+            return;
+        }
+    }
+}
 
-    auto f2 = [&](Node<long,long> *n) {
-        return insert(n, y, value, 0L, f1);
-    };
+void updateX(NodeX* node, int x, int y, long value) {
+    while (node != nullptr) {
+        updateY(node->yTree, y, value);
 
-
-    return insert(node, x, make_pair(y,value), null_ptr, f2);
+        if (x < node->key) {
+            node = node->left;
+        } else if (x > node->key) {
+            node = node->right;
+        } else {
+            node->y = y;
+            node->value = value;
+            return;
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-struct Entry {
-    int latitude;
-    int longitude;
-    long max_points;
-};
 
 void solve(int n, int d_lat, int d_long, vector<City>& cities) {
     sort(cities.begin(), cities.end(), [](const City& c1, const City& c2) {
         return c1.height > c2.height;
     });
 
-    Node<pair<int,long>, Node<long,long>*> *range_tree = nullptr;
+    NodeX *range_tree = nullptr;
+    for (auto &c : cities) {
+        range_tree = insertXPhase1(range_tree, c.latitude, c.longitude, 0);
+    }
+    for (auto &c : cities) {
+        insertXPhase2(range_tree, c.latitude, c.longitude, 0);
+    }
+
 
     long result = 0;
-    //int cnt = 0;
-    //vector<Entry> acc;
 
     for (auto &c : cities) {
         int x1 = max(0, c.latitude - d_lat);
@@ -309,42 +377,16 @@ void solve(int n, int d_lat, int d_long, vector<City>& cities) {
         int x2 = c.latitude + d_lat;
         int y2 = c.longitude + d_long;
 
-        /*long max_points2 = 0;
-        for (const Entry& e : acc) {
-            if ((abs(e.latitude-c.latitude) <= d_lat) &&
-                (abs(e.longitude-c.longitude) <= d_long) &&
-                (e.max_points > max_points2)) {
-                max_points2 = e.max_points;
-            }
-        }
-
-
-        cout << "x1=" << x1 << " y1=" << y1 << " x2=" << x2 << " y2=" << y2 << " x=" << c.latitude << " y=" << c.longitude << endl;
-        long max_points = max(0L, get_max(range_tree, x1, x2, y1, y2));
-        cout << "maxpoints=" << max_points << endl;
-        cout << "maxpoints2=" << max_points2 << endl;
-        cout << "c=" << max_points+c.point << endl;
-        cout << "-----------------------------------" << endl;*/
 
         long max_points = max(0L, get_max(range_tree, x1, x2, y1, y2));
-        /*if (max_points != max_points2) {
-            cout << "fuck!" << endl;
-            get_max(range_tree, x1, x2, y1, y2);
-            return;
-        }*/
         max_points += c.point;
 
         if (max_points > result) {
             result = max_points;
         }
 
-        //acc.push_back({c.latitude, c.longitude, max_points});
-        range_tree = update(range_tree, c.latitude, c.longitude, max_points);
+        updateX(range_tree, c.latitude, c.longitude, max_points);
 
-        //cnt++;
-        //if (cnt > 100) {
-        //    break;
-        //}
     }
 
     cout << result << endl;
@@ -353,7 +395,7 @@ void solve(int n, int d_lat, int d_long, vector<City>& cities) {
 }
 
 int main(int argc, char **argv) {
-    //std::ifstream is("tests/input08.txt");
+    //std::ifstream is("tests/input09.txt");
 
     int n, d_lat, d_long;
     cin >> n >> d_lat >> d_long;
