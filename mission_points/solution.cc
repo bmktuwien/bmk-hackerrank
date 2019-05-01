@@ -12,8 +12,6 @@ struct City {
 ////////////////////////////////////////////////////////////////////////////////
 
 struct NodeY {
-    NodeY *left{nullptr};
-    NodeY *right{nullptr};
     int key{-1};
     long max{-1};
     long value{-1};
@@ -25,9 +23,10 @@ struct NodeX {
     int key{-1};
     long y{-1};
     long value{-1};
-    NodeY *yTree{nullptr};
+    vector<NodeY> yTree;
 };
 
+/*
 NodeY *build_y_tree(const vector<pair<int,int>>& points, int l, int r) {
     if (r < l) {
         return nullptr;
@@ -41,7 +40,21 @@ NodeY *build_y_tree(const vector<pair<int,int>>& points, int l, int r) {
     node->right = build_y_tree(points, m+1, r);
 
     return node;
+}*/
+
+void make_bst(const vector<pair<int,int>>& in, vector<NodeY>& out, int l, int r, int i) {
+    if (r < l) {
+        return;
+    }
+
+    int m = (l + r) / 2;
+    int k = in[m].second;
+
+    out[i].key = k;
+    make_bst(in, out, l, m-1, 2*i+1);
+    make_bst(in, out, m+1, r, 2*i+2);
 }
+
 
 NodeX *build_range_tree(const vector<pair<int,int>>& points, int l, int r) {
     if (r < l) {
@@ -69,7 +82,9 @@ NodeX *build_range_tree(const vector<pair<int,int>>& points, int l, int r) {
 
     node->left = build_range_tree(points_l, l, m-1);
     node->right = build_range_tree(points_r, m+1, r);
-    node->yTree = build_y_tree(points, 0, points.size()-1);
+
+    node->yTree.resize(points.size()*2);
+    make_bst(points, node->yTree, 0, points.size()-1, 0);
 
     return node;
 }
@@ -77,57 +92,82 @@ NodeX *build_range_tree(const vector<pair<int,int>>& points, int l, int r) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-long get_max_y(NodeY *node, int l, int r) {
+inline long is_not_null(const vector<NodeY>& yTree, int idx) {
+    return idx < yTree.size() && yTree[idx].key != -1;
+}
+
+inline long left_child_is_not_null(const vector<NodeY>& yTree, int idx) {
+    idx = 2*idx + 1;
+    return idx < yTree.size() && yTree[idx].key != -1;
+}
+
+inline long right_child_is_not_null(const vector<NodeY>& yTree, int idx) {
+    idx = 2*idx + 2;
+    return idx < yTree.size() && yTree[idx].key != -1;
+}
+
+long get_max_y(const vector<NodeY>& yTree, int l, int r) {
     long result = 0;
-    while (node != nullptr) {
-        if (node->key < l) {
-            node = node->right;
-        } else if (node->key > r) {
-            node = node->left;
+
+    int idx = 0;
+    while (is_not_null(yTree, idx)) {
+        if (yTree[idx].key < l) {
+            idx = idx*2+2;
+        } else if (yTree[idx].key > r) {
+            idx = idx*2+1;
         } else {
             break;
         }
     }
 
-    if (node == nullptr) {
+
+    if (!is_not_null(yTree, idx)) {
         return result;
     }
 
-    result = node->value;
+    result = yTree[idx].value;
 
-    auto *node_l = node->left;
-    while (node_l != nullptr) {
-        if (node_l->key >= l) {
-            long tmp = max(node_l->value, node_l->right != nullptr ? node_l->right->max : 0L);
+    int idx_l = idx*2+1;
+    while (is_not_null(yTree, idx_l)) {
+        if (yTree[idx_l].key >= l) {
+            long tmp = yTree[idx_l].value;
+
+            if (right_child_is_not_null(yTree, idx_l)) {
+                tmp = max(tmp, yTree[idx_l*2+2].max);
+            }
 
             if (tmp > result) {
                 result = tmp;
             }
         }
 
-        if (node_l->key < l) {
-            node_l = node_l->right;
-        } else if (node_l->key > l) {
-            node_l = node_l->left;
+        if (yTree[idx_l].key < l) {
+            idx_l = idx_l*2+2;
+        } else if (yTree[idx_l].key > l) {
+            idx_l = idx_l*2+1;
         } else {
             break;
         }
     }
 
-    auto *node_r = node->right;
-    while (node_r != nullptr) {
-        if (node_r->key <= r) {
-            long tmp = max(node_r->value, node_r->left != nullptr ? node_r->left->max : 0L);
+    int idx_r = idx*2+2;
+    while (is_not_null(yTree, idx_r)) {
+        if (yTree[idx_r].key <= r) {
+            long tmp = yTree[idx_r].value;
+
+            if (left_child_is_not_null(yTree, idx_r)) {
+                tmp = max(tmp, yTree[idx_r*2+1].max);
+            }
 
             if (tmp > result) {
                 result = tmp;
             }
         }
 
-        if (node_r->key < r) {
-            node_r = node_r->right;
-        } else if (node_r->key > r) {
-            node_r = node_r->left;
+        if (yTree[idx_r].key < r) {
+            idx_r = idx_r*2+2;
+        } else if (yTree[idx_r].key > r) {
+            idx_r = idx_r*2+1;
         } else {
             break;
         }
@@ -160,8 +200,11 @@ long get_max(NodeX *node, int xl, int xr, int yl, int yr) {
     auto *node_l = node->left;
     while (node_l != nullptr) {
         if (node_l->key >= xl) {
-            auto ptr = node_l->right != nullptr ? node_l->right->yTree : nullptr;
-            long tmp = get_max_y(ptr, yl, yr);
+            long tmp = 0;
+            if (node_l->right != nullptr) {
+                tmp = get_max_y(node_l->right->yTree, yl, yr);
+            }
+
             if (yl <= node_l->y && node_l->y <= yr && node_l->value > tmp) {
                 tmp = node_l->value;
             }
@@ -183,8 +226,11 @@ long get_max(NodeX *node, int xl, int xr, int yl, int yr) {
     auto *node_r = node->right;
     while (node_r != nullptr ) {
         if (node_r->key <= xr) {
-            auto ptr = node_r->left != nullptr ? node_r->left->yTree : nullptr;
-            long tmp = get_max_y(ptr, yl, yr);
+            long tmp = 0;
+            if (node_r->left != nullptr) {
+                tmp = get_max_y(node_r->left->yTree, yl, yr);
+            }
+
             if (yl <= node_r->y && node_r->y <= yr && node_r->value > tmp) {
                 tmp = node_r->value;
             }
@@ -206,16 +252,17 @@ long get_max(NodeX *node, int xl, int xr, int yl, int yr) {
     return result;
 }
 
-void updateY(NodeY* node, int y, long value) {
-    while (node != nullptr) {
-        node->max = max(node->max, value);
+void updateY(vector<NodeY>& yTree, int y, long value) {
+    int idx = 0;
+    while (is_not_null(yTree, idx)) {
+        yTree[idx].max = max(yTree[idx].max, value);
 
-        if (y < node->key) {
-            node = node->left;
-        } else if (y > node->key) {
-            node = node->right;
+        if (y < yTree[idx].key) {
+            idx = idx*2+1;
+        } else if (y >  yTree[idx].key) {
+            idx = idx*2+2;
         } else {
-            node->value = value;
+            yTree[idx].value = value;
             return;
         }
     }
