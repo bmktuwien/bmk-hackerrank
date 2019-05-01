@@ -18,8 +18,6 @@ struct NodeY {
 };
 
 struct NodeX {
-    NodeX *left{nullptr};
-    NodeX *right{nullptr};
     int key{-1};
     long y{-1};
     long value{-1};
@@ -42,7 +40,8 @@ NodeY *build_y_tree(const vector<pair<int,int>>& points, int l, int r) {
     return node;
 }*/
 
-void make_bst(const vector<pair<int,int>>& in, vector<NodeY>& out, int l, int r, int i) {
+void make_y_bst(const vector<pair<int, int>> &in, vector<NodeY> &out,
+                int l, int r, int i) {
     if (r < l) {
         return;
     }
@@ -51,17 +50,16 @@ void make_bst(const vector<pair<int,int>>& in, vector<NodeY>& out, int l, int r,
     int k = in[m].second;
 
     out[i].key = k;
-    make_bst(in, out, l, m-1, 2*i+1);
-    make_bst(in, out, m+1, r, 2*i+2);
+    make_y_bst(in, out, l, m - 1, 2*i + 1);
+    make_y_bst(in, out, m + 1, r, 2*i + 2);
 }
 
 
-NodeX *build_range_tree(const vector<pair<int,int>>& points, int l, int r) {
+void make_x_bst(const vector<pair<int,int>>& in, vector<NodeX> &out,
+                int l, int r, int i) {
     if (r < l) {
-        return nullptr;
+        return;
     }
-
-    auto *node = new NodeX();
 
     int m = (l + r) / 2;
 
@@ -69,41 +67,42 @@ NodeX *build_range_tree(const vector<pair<int,int>>& points, int l, int r) {
     vector<pair<int,int>> points_r;
 
     // split the points on x
-    for (auto &p : points) {
+    for (auto &p : in) {
         if (p.first < m) {
             points_l.push_back(p);
         } else if (p.first > m) {
             points_r.push_back(p);
         } else {
-            node->key = p.first;
-            node->y = p.second;
+            out[i].key = p.first;
+            out[i].y = p.second;
         }
     }
 
-    node->left = build_range_tree(points_l, l, m-1);
-    node->right = build_range_tree(points_r, m+1, r);
+    out[i].yTree.resize(in.size()*2);
+    make_y_bst(in, out[i].yTree, 0, in.size() - 1, 0);
 
-    node->yTree.resize(points.size()*2);
-    make_bst(points, node->yTree, 0, points.size()-1, 0);
-
-    return node;
+    make_x_bst(points_l, out, l, m-1, 2*i + 1);
+    make_x_bst(points_r, out, m+1, r, 2*i + 2);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-inline long is_not_null(const vector<NodeY>& yTree, int idx) {
-    return idx < yTree.size() && yTree[idx].key != -1;
+template<typename T>
+inline long is_not_null(const vector<T> &t, int idx) {
+    return idx < t.size() && t[idx].key != -1;
 }
 
-inline long left_child_is_not_null(const vector<NodeY>& yTree, int idx) {
+template<typename T>
+inline long left_child_is_not_null(const vector<T> &t, int idx) {
     idx = 2*idx + 1;
-    return idx < yTree.size() && yTree[idx].key != -1;
+    return idx < t.size() && t[idx].key != -1;
 }
 
-inline long right_child_is_not_null(const vector<NodeY>& yTree, int idx) {
+template<typename T>
+inline long right_child_is_not_null(const vector<T> &t, int idx) {
     idx = 2*idx + 2;
-    return idx < yTree.size() && yTree[idx].key != -1;
+    return idx < t.size() && t[idx].key != -1;
 }
 
 long get_max_y(const vector<NodeY>& yTree, int l, int r) {
@@ -176,37 +175,39 @@ long get_max_y(const vector<NodeY>& yTree, int l, int r) {
     return result;
 }
 
-long get_max(NodeX *node, int xl, int xr, int yl, int yr) {
-
+long get_max(const vector<NodeX>& xTree, int xl, int xr, int yl, int yr) {
     long result = 0;
-    while (node != nullptr) {
-        if (node->key < xl) {
-            node = node->right;
-        } else if (node->key > xr) {
-            node = node->left;
+
+    int idx = 0;
+    while (is_not_null(xTree, idx)) {
+        if (xTree[idx].key < xl) {
+            idx = idx*2+2;
+        } else if (xTree[idx].key > xr) {
+            idx = idx*2+1;
         } else {
             break;
         }
     }
 
-    if (node == nullptr) {
+    if (!is_not_null(xTree, idx)) {
         return result;
     }
 
-    if (yl <= node->y && node->y <= yr) {
-        result = node->value;
+    if (yl <= xTree[idx].y && xTree[idx].y <= yr) {
+        result = xTree[idx].value;
     }
 
-    auto *node_l = node->left;
-    while (node_l != nullptr) {
-        if (node_l->key >= xl) {
+    int idx_l = idx*2+1;
+    while (is_not_null(xTree, idx_l)) {
+        if (xTree[idx_l].key >= xl) {
             long tmp = 0;
-            if (node_l->right != nullptr) {
-                tmp = get_max_y(node_l->right->yTree, yl, yr);
+
+            if (right_child_is_not_null(xTree, idx_l)) {
+                tmp = get_max_y(xTree[idx_l*2+2].yTree, yl, yr);
             }
 
-            if (yl <= node_l->y && node_l->y <= yr && node_l->value > tmp) {
-                tmp = node_l->value;
+            if (yl <= xTree[idx_l].y && xTree[idx_l].y <= yr && xTree[idx_l].value > tmp) {
+                tmp = xTree[idx_l].value;
             }
 
             if (tmp > result) {
@@ -214,25 +215,27 @@ long get_max(NodeX *node, int xl, int xr, int yl, int yr) {
             }
         }
 
-        if (node_l->key < xl) {
-            node_l = node_l->right;
-        } else if (node_l->key > xl) {
-            node_l = node_l->left;
+        if (xTree[idx_l].key < xl) {
+            idx_l = idx_l*2+2;
+        } else if (xTree[idx_l].key > xl) {
+            idx_l = idx_l*2+1;
         } else {
             break;
         }
     }
 
-    auto *node_r = node->right;
-    while (node_r != nullptr ) {
-        if (node_r->key <= xr) {
+
+    int idx_r = idx*2+2;
+    while (is_not_null(xTree, idx_r)) {
+        if (xTree[idx_r].key <= xr) {
             long tmp = 0;
-            if (node_r->left != nullptr) {
-                tmp = get_max_y(node_r->left->yTree, yl, yr);
+
+            if (left_child_is_not_null(xTree, idx_r)) {
+                tmp = get_max_y(xTree[idx_r*2+1].yTree, yl, yr);
             }
 
-            if (yl <= node_r->y && node_r->y <= yr && node_r->value > tmp) {
-                tmp = node_r->value;
+            if (yl <= xTree[idx_r].y && xTree[idx_r].y <= yr && xTree[idx_r].value > tmp) {
+                tmp = xTree[idx_r].value;
             }
 
             if (tmp > result) {
@@ -240,10 +243,10 @@ long get_max(NodeX *node, int xl, int xr, int yl, int yr) {
             }
         }
 
-        if (node_r->key < xr) {
-            node_r = node_r->right;
-        } else if (node_r->key > xr) {
-            node_r = node_r->left;
+        if (xTree[idx_r].key < xr) {
+            idx_r = idx_r*2+2;
+        } else if (xTree[idx_r].key > xr) {
+            idx_r = idx_r*2+1;
         } else {
             break;
         }
@@ -268,17 +271,18 @@ void updateY(vector<NodeY>& yTree, int y, long value) {
     }
 }
 
-void updateX(NodeX* node, int x, int y, long value) {
-    while (node != nullptr) {
-        updateY(node->yTree, y, value);
+void updateX(vector<NodeX>& xTree, int x, int y, long value) {
+    int idx = 0;
+    while (is_not_null(xTree, idx)) {
+        updateY(xTree[idx].yTree, y, value);
 
-        if (x < node->key) {
-            node = node->left;
-        } else if (x > node->key) {
-            node = node->right;
+        if (x < xTree[idx].key) {
+            idx = idx*2+1;
+        } else if (x > xTree[idx].key) {
+            idx = idx*2+2;
         } else {
-            node->y = y;
-            node->value = value;
+            xTree[idx].y = y;
+            xTree[idx].value = value;
             return;
         }
     }
@@ -288,7 +292,7 @@ void updateX(NodeX* node, int x, int y, long value) {
 
 void solve(int n, int d_lat, int d_long, vector<City>& cities) {
     sort(cities.begin(), cities.end(), [](const City& c1, const City& c2) {
-        return c1.latitude > c2.latitude;
+        return c1.latitude < c2.latitude;
     });
     // normalize x coordinates
     for (int i = 0; i < cities.size(); i++) {
@@ -309,7 +313,8 @@ void solve(int n, int d_lat, int d_long, vector<City>& cities) {
         return p1.second < p2.second;
     });
 
-    NodeX *range_tree = build_range_tree(points, 0, points.size()-1);
+    vector<NodeX> range_tree(points.size()*2);
+    make_x_bst(points, range_tree, 0, points.size()-1, 0);
 
     long result = 0;
 
@@ -333,6 +338,8 @@ void solve(int n, int d_lat, int d_long, vector<City>& cities) {
 }
 
 int main(int argc, char **argv) {
+    //std::ifstream is("tests/input04.txt");
+
     int n, d_lat, d_long;
     cin >> n >> d_lat >> d_long;
 
