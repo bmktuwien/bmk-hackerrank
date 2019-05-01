@@ -9,7 +9,6 @@ struct City {
     int point;
 };
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 struct NodeY {
@@ -240,13 +239,6 @@ void updateX(NodeX* node, int x, int y, long value) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*struct Entry {
-    int latitude;
-    int longitude;
-    long max_points;
-};*/
-
-
 void solve(int n, int d_lat, int d_long, vector<City>& cities) {
     sort(cities.begin(), cities.end(), [](const City& c1, const City& c2) {
         return c1.latitude > c2.latitude;
@@ -274,36 +266,11 @@ void solve(int n, int d_lat, int d_long, vector<City>& cities) {
 
     long result = 0;
 
-    //vector<Entry> acc;
-
     for (auto &c : cities) {
         int x1 = max(0, c.latitude - d_lat);
         int y1 = max(0, c.longitude - d_long);
         int x2 = c.latitude + d_lat;
         int y2 = c.longitude + d_long;
-
-        /*long max_points2 = 0;
-        for (const Entry& e : acc) {
-            if ((abs(e.latitude-c.latitude) <= d_lat) &&
-                (abs(e.longitude-c.longitude) <= d_long) &&
-                (e.max_points > max_points2)) {
-                max_points2 = e.max_points;
-            }
-        }
-
-
-        cout << "x1=" << x1 << " y1=" << y1 << " x2=" << x2 << " y2=" << y2 << " x=" << c.latitude << " y=" << c.longitude << endl;
-        long max_points = max(0L, get_max(range_tree, x1, x2, y1, y2));
-        cout << "maxpoints=" << max_points << endl;
-        cout << "maxpoints2=" << max_points2 << endl;
-        cout << "c=" << max_points+c.point << endl;
-        cout << "-----------------------------------" << endl;
-
-        if (max_points != max_points2) {
-            cout << "fuck!" << endl;
-            get_max(range_tree, x1, x2, y1, y2);
-            return;
-        }*/
 
         long max_points = max(0L, get_max(range_tree, x1, x2, y1, y2));
         max_points += c.point;
@@ -312,17 +279,13 @@ void solve(int n, int d_lat, int d_long, vector<City>& cities) {
             result = max_points;
         }
 
-        //acc.push_back({c.latitude, c.longitude, max_points+c.point});
         updateX(range_tree, c.latitude, c.longitude, max_points);
-
     }
 
     cout << result << endl;
 }
 
 int main(int argc, char **argv) {
-    //std::ifstream is("tests/input05.txt");
-
     int n, d_lat, d_long;
     cin >> n >> d_lat >> d_long;
 
