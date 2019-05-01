@@ -15,7 +15,6 @@ struct City {
 struct NodeY {
     NodeY *left{nullptr};
     NodeY *right{nullptr};
-    int height{1};
     int key{-1};
     long max{-1};
     long value{-1};
@@ -24,172 +23,58 @@ struct NodeY {
 struct NodeX {
     NodeX *left{nullptr};
     NodeX *right{nullptr};
-    int height{1};
     int key{-1};
     long y{-1};
     long value{-1};
     NodeY *yTree{nullptr};
 };
 
-
-template<typename Node>
-int height(Node *N) {
-    if (N == nullptr)
-        return 0;
-
-    return N->height;
-}
-
-template<typename Node>
-Node *rightRotate(Node *y) {
-    auto *x = y->left;
-    auto *t2 = x->right;
-
-    // Perform rotation
-    x->right = y;
-    y->left = t2;
-
-    // Update heights
-    y->height = max(height(y->left),
-                    height(y->right)) + 1;
-    x->height = max(height(x->left),
-                    height(x->right)) + 1;
-
-    // Return new root
-    return x;
-}
-
-template<typename Node>
-Node *leftRotate(Node *x) {
-    auto *y = x->right;
-    auto *t2 = y->left;
-
-    // Perform rotation
-    y->left = x;
-    x->right = t2;
-
-    // Update heights
-    x->height = max(height(x->left),
-                    height(x->right)) + 1;
-    y->height = max(height(y->left),
-                    height(y->right)) + 1;
-
-    // Return new root
-    return y;
-}
-
-template<typename Node>
-int getBalance(Node *node) {
-    if (node == nullptr)
-        return 0;
-    return height(node->left) - height(node->right);
-}
-
-NodeY* insertY(NodeY* node, int y, long value) {
-    if (node == nullptr) {
-        node = new NodeY();
-        node->key = y;
-        node->value = value;
-        node->max = value;
-        return node;
+NodeY *build_y_tree(const vector<pair<int,int>>& points, int l, int r) {
+    if (r < l) {
+        return nullptr;
     }
 
-    node->max = max(node->max, value);
+    int m = (l + r) / 2;
 
-    if (y < node->key) {
-        node->left = insertY(node->left, y, value);
-    } else if (y > node->key) {
-        node->right = insertY(node->right, y, value);
-    } else {
-       return node;
-    }
-
-    node->height = 1 + max(height(node->left),
-                           height(node->right));
-
-    int balance = getBalance(node);
-
-    // Left Left Case
-    if (balance > 1 && y < node->left->key)
-        return rightRotate(node);
-
-    // Right Right Case
-    if (balance < -1 && y > node->right->key)
-        return leftRotate(node);
-
-    // Left Right Case
-    if (balance > 1 && y > node->left->key) {
-        node->left = leftRotate(node->left);
-        return rightRotate(node);
-    }
-
-    // Right Left Case
-    if (balance < -1 && y < node->right->key) {
-        node->right = rightRotate(node->right);
-        return leftRotate(node);
-    }
+    auto *node = new NodeY();
+    node->key = points[m].second;
+    node->left = build_y_tree(points, l, m-1);
+    node->right = build_y_tree(points, m+1, r);
 
     return node;
 }
 
-NodeX* insertXPhase1(NodeX* node, int x, int y, long value) {
-    if (node == nullptr) {
-        node = new NodeX();
-        node->key = x;
-        node->y = y;
-        node->value = value;
-        return node;
+NodeX *build_range_tree(const vector<pair<int,int>>& points, int l, int r) {
+    if (r < l) {
+        return nullptr;
     }
 
-    if (x < node->key) {
-        node->left = insertXPhase1(node->left, x, y, value);
-    } else if (x > node->key) {
-        node->right = insertXPhase1(node->right, x, y, value);
-    } else {
-        return node;
-    }
+    auto *node = new NodeX();
 
-    node->height = 1 + max(height(node->left),
-                           height(node->right));
+    int m = (l + r) / 2;
 
-    int balance = getBalance(node);
+    vector<pair<int,int>> points_l;
+    vector<pair<int,int>> points_r;
 
-    // Left Left Case
-    if (balance > 1 && x < node->left->key)
-        return rightRotate(node);
-
-    // Right Right Case
-    if (balance < -1 && x > node->right->key)
-        return leftRotate(node);
-
-    // Left Right Case
-    if (balance > 1 && x > node->left->key) {
-        node->left = leftRotate(node->left);
-        return rightRotate(node);
-    }
-
-    // Right Left Case
-    if (balance < -1 && x < node->right->key) {
-        node->right = rightRotate(node->right);
-        return leftRotate(node);
-    }
-
-    return node;
-}
-
-void insertXPhase2(NodeX* node, int x, int y, long value) {
-    while (node != nullptr) {
-        node->yTree = insertY(node->yTree, y, value);
-
-        if (x < node->key) {
-            node = node->left;
-        } else if (x > node->key) {
-            node = node->right;
+    // split the points on x
+    for (auto &p : points) {
+        if (p.first < m) {
+            points_l.push_back(p);
+        } else if (p.first > m) {
+            points_r.push_back(p);
         } else {
-            return;
+            node->key = p.first;
+            node->y = p.second;
         }
     }
+
+    node->left = build_range_tree(points_l, l, m-1);
+    node->right = build_range_tree(points_r, m+1, r);
+    node->yTree = build_y_tree(points, 0, points.size()-1);
+
+    return node;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -355,21 +240,41 @@ void updateX(NodeX* node, int x, int y, long value) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/*struct Entry {
+    int latitude;
+    int longitude;
+    long max_points;
+};*/
+
+
 void solve(int n, int d_lat, int d_long, vector<City>& cities) {
+    sort(cities.begin(), cities.end(), [](const City& c1, const City& c2) {
+        return c1.latitude > c2.latitude;
+    });
+    // normalize x coordinates
+    for (int i = 0; i < cities.size(); i++) {
+        cities[i].latitude = i;
+    }
+
+    // sort cities by heights
     sort(cities.begin(), cities.end(), [](const City& c1, const City& c2) {
         return c1.height > c2.height;
     });
 
-    NodeX *range_tree = nullptr;
+    // sort points by y coordinates
+    vector<pair<int,int>> points;
     for (auto &c : cities) {
-        range_tree = insertXPhase1(range_tree, c.latitude, c.longitude, 0);
+        points.emplace_back(c.latitude, c.longitude);
     }
-    for (auto &c : cities) {
-        insertXPhase2(range_tree, c.latitude, c.longitude, 0);
-    }
+    sort(points.begin(), points.end(), [](const pair<int,int>& p1, const pair<int,int>& p2) {
+        return p1.second < p2.second;
+    });
 
+    NodeX *range_tree = build_range_tree(points, 0, points.size()-1);
 
     long result = 0;
+
+    //vector<Entry> acc;
 
     for (auto &c : cities) {
         int x1 = max(0, c.latitude - d_lat);
@@ -377,6 +282,28 @@ void solve(int n, int d_lat, int d_long, vector<City>& cities) {
         int x2 = c.latitude + d_lat;
         int y2 = c.longitude + d_long;
 
+        /*long max_points2 = 0;
+        for (const Entry& e : acc) {
+            if ((abs(e.latitude-c.latitude) <= d_lat) &&
+                (abs(e.longitude-c.longitude) <= d_long) &&
+                (e.max_points > max_points2)) {
+                max_points2 = e.max_points;
+            }
+        }
+
+
+        cout << "x1=" << x1 << " y1=" << y1 << " x2=" << x2 << " y2=" << y2 << " x=" << c.latitude << " y=" << c.longitude << endl;
+        long max_points = max(0L, get_max(range_tree, x1, x2, y1, y2));
+        cout << "maxpoints=" << max_points << endl;
+        cout << "maxpoints2=" << max_points2 << endl;
+        cout << "c=" << max_points+c.point << endl;
+        cout << "-----------------------------------" << endl;
+
+        if (max_points != max_points2) {
+            cout << "fuck!" << endl;
+            get_max(range_tree, x1, x2, y1, y2);
+            return;
+        }*/
 
         long max_points = max(0L, get_max(range_tree, x1, x2, y1, y2));
         max_points += c.point;
@@ -385,17 +312,16 @@ void solve(int n, int d_lat, int d_long, vector<City>& cities) {
             result = max_points;
         }
 
+        //acc.push_back({c.latitude, c.longitude, max_points+c.point});
         updateX(range_tree, c.latitude, c.longitude, max_points);
 
     }
 
     cout << result << endl;
-
-
 }
 
 int main(int argc, char **argv) {
-    //std::ifstream is("tests/input09.txt");
+    //std::ifstream is("tests/input05.txt");
 
     int n, d_lat, d_long;
     cin >> n >> d_lat >> d_long;
