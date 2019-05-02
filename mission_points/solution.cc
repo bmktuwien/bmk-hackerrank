@@ -360,6 +360,9 @@ void solve(int n, int d_lat, int d_long, vector<City>& cities) {
 }
 
 int main(int argc, char **argv) {
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+
     int n, d_lat, d_long;
     cin >> n >> d_lat >> d_long;
 
