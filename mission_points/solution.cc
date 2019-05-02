@@ -91,7 +91,7 @@ inline bool right_child_is_not_null(const vector<T> &t, int idx) {
     return idx < t.size() && t[idx].key != -1;
 }
 
-long get_max_y(const vector<NodeY>& yTree, int l, int r) {
+long get_max_y(const vector<NodeY>& yTree, int l, int r, long best_so_far) {
     long result = 0;
 
     int idx = 0;
@@ -110,7 +110,7 @@ long get_max_y(const vector<NodeY>& yTree, int l, int r) {
         return result;
     }
 
-    if (yTree[idx].max == -1) {
+    if (yTree[idx].max == -1 || yTree[idx].max <= best_so_far) {
         return result;
     }
 
@@ -118,7 +118,7 @@ long get_max_y(const vector<NodeY>& yTree, int l, int r) {
 
     int idx_l = idx*2+1;
     while (is_not_null(yTree, idx_l)) {
-        if (yTree[idx_l].max == -1) {
+        if (yTree[idx_l].max == -1 || yTree[idx].max <= best_so_far) {
             break;
         }
 
@@ -145,7 +145,7 @@ long get_max_y(const vector<NodeY>& yTree, int l, int r) {
 
     int idx_r = idx*2+2;
     while (is_not_null(yTree, idx_r)) {
-        if (yTree[idx_r].max == -1) {
+        if (yTree[idx_r].max == -1 || yTree[idx].max <= best_so_far) {
             break;
         }
 
@@ -201,7 +201,7 @@ long get_max(const vector<NodeX>& xTree, int xl, int xr, int yl, int yr) {
             long tmp = 0;
 
             if (right_child_is_not_null(xTree, idx_l)) {
-                tmp = get_max_y(xTree[idx_l*2+2].yTree, yl, yr);
+                tmp = get_max_y(xTree[idx_l*2+2].yTree, yl, yr, result);
             }
 
             if (yl <= xTree[idx_l].y && xTree[idx_l].y <= yr && xTree[idx_l].value > tmp) {
@@ -229,7 +229,7 @@ long get_max(const vector<NodeX>& xTree, int xl, int xr, int yl, int yr) {
             long tmp = 0;
 
             if (left_child_is_not_null(xTree, idx_r)) {
-                tmp = get_max_y(xTree[idx_r*2+1].yTree, yl, yr);
+                tmp = get_max_y(xTree[idx_r*2+1].yTree, yl, yr, result);
             }
 
             if (yl <= xTree[idx_r].y && xTree[idx_r].y <= yr && xTree[idx_r].value > tmp) {
@@ -344,8 +344,6 @@ void solve(int n, int d_lat, int d_long, vector<City>& cities) {
 }
 
 int main(int argc, char **argv) {
-    //std::ifstream is("tests/input04.txt");
-
     int n, d_lat, d_long;
     cin >> n >> d_lat >> d_long;
 
