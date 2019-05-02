@@ -9,8 +9,6 @@ struct City {
     int point;
 };
 
-////////////////////////////////////////////////////////////////////////////////
-
 struct NodeY {
     int key{-1};
     long max{-1};
@@ -24,21 +22,7 @@ struct NodeX {
     vector<NodeY> yTree;
 };
 
-/*
-NodeY *build_y_tree(const vector<pair<int,int>>& points, int l, int r) {
-    if (r < l) {
-        return nullptr;
-    }
-
-    int m = (l + r) / 2;
-
-    auto *node = new NodeY();
-    node->key = points[m].second;
-    node->left = build_y_tree(points, l, m-1);
-    node->right = build_y_tree(points, m+1, r);
-
-    return node;
-}*/
+////////////////////////////////////////////////////////////////////////////////
 
 void make_y_bst(const vector<pair<int, int>> &in, vector<NodeY> &out,
                 int l, int r, int i) {
@@ -78,8 +62,10 @@ void make_x_bst(const vector<pair<int,int>>& in, vector<NodeX> &out,
         }
     }
 
-    out[i].yTree.resize(in.size()*2);
-    make_y_bst(in, out[i].yTree, 0, in.size() - 1, 0);
+    if (i > 0) {
+        out[i].yTree.resize(in.size()*2);
+        make_y_bst(in, out[i].yTree, 0, in.size() - 1, 0);
+    }
 
     make_x_bst(points_l, out, l, m-1, 2*i + 1);
     make_x_bst(points_r, out, m+1, r, 2*i + 2);
@@ -89,18 +75,18 @@ void make_x_bst(const vector<pair<int,int>>& in, vector<NodeX> &out,
 ////////////////////////////////////////////////////////////////////////////////
 
 template<typename T>
-inline long is_not_null(const vector<T> &t, int idx) {
+inline bool is_not_null(const vector<T> &t, int idx) {
     return idx < t.size() && t[idx].key != -1;
 }
 
 template<typename T>
-inline long left_child_is_not_null(const vector<T> &t, int idx) {
+inline bool left_child_is_not_null(const vector<T> &t, int idx) {
     idx = 2*idx + 1;
     return idx < t.size() && t[idx].key != -1;
 }
 
 template<typename T>
-inline long right_child_is_not_null(const vector<T> &t, int idx) {
+inline bool right_child_is_not_null(const vector<T> &t, int idx) {
     idx = 2*idx + 2;
     return idx < t.size() && t[idx].key != -1;
 }
@@ -124,10 +110,18 @@ long get_max_y(const vector<NodeY>& yTree, int l, int r) {
         return result;
     }
 
+    if (yTree[idx].max == -1) {
+        return result;
+    }
+
     result = yTree[idx].value;
 
     int idx_l = idx*2+1;
     while (is_not_null(yTree, idx_l)) {
+        if (yTree[idx_l].max == -1) {
+            break;
+        }
+
         if (yTree[idx_l].key >= l) {
             long tmp = yTree[idx_l].value;
 
@@ -151,6 +145,10 @@ long get_max_y(const vector<NodeY>& yTree, int l, int r) {
 
     int idx_r = idx*2+2;
     while (is_not_null(yTree, idx_r)) {
+        if (yTree[idx_r].max == -1) {
+            break;
+        }
+
         if (yTree[idx_r].key <= r) {
             long tmp = yTree[idx_r].value;
 
@@ -274,7 +272,9 @@ void updateY(vector<NodeY>& yTree, int y, long value) {
 void updateX(vector<NodeX>& xTree, int x, int y, long value) {
     int idx = 0;
     while (is_not_null(xTree, idx)) {
-        updateY(xTree[idx].yTree, y, value);
+        if (idx > 0) {
+            updateY(xTree[idx].yTree, y, value);
+        }
 
         if (x < xTree[idx].key) {
             idx = idx*2+1;
@@ -324,6 +324,10 @@ void solve(int n, int d_lat, int d_long, vector<City>& cities) {
         int x2 = c.latitude + d_lat;
         int y2 = c.longitude + d_long;
 
+        if (result+c.point < 0) {
+            continue;
+        }
+
         long max_points = max(0L, get_max(range_tree, x1, x2, y1, y2));
         max_points += c.point;
 
@@ -331,7 +335,9 @@ void solve(int n, int d_lat, int d_long, vector<City>& cities) {
             result = max_points;
         }
 
-        updateX(range_tree, c.latitude, c.longitude, max_points);
+        if (max_points > 0) {
+            updateX(range_tree, c.latitude, c.longitude, max_points);
+        }
     }
 
     cout << result << endl;
