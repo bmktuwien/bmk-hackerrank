@@ -91,6 +91,14 @@ inline bool right_child_is_not_null(const vector<T> &t, int idx) {
     return idx < t.size() && t[idx].key != -1;
 }
 
+bool contains_better_max(const vector<NodeY>& yTree, long best_so_far) {
+    if (yTree.empty()) {
+        return false;
+    } else {
+        return yTree[0].max > best_so_far;
+    }
+}
+
 long get_max_y(const vector<NodeY>& yTree, int l, int r, long best_so_far) {
     long result = 0;
 
@@ -197,6 +205,10 @@ long get_max(const vector<NodeX>& xTree, int xl, int xr, int yl, int yr) {
 
     int idx_l = idx*2+1;
     while (is_not_null(xTree, idx_l)) {
+        if (!contains_better_max(xTree[idx_l].yTree, result)) {
+            break;
+        }
+
         if (xTree[idx_l].key >= xl) {
             long tmp = 0;
 
@@ -225,6 +237,10 @@ long get_max(const vector<NodeX>& xTree, int xl, int xr, int yl, int yr) {
 
     int idx_r = idx*2+2;
     while (is_not_null(xTree, idx_r)) {
+        if (!contains_better_max(xTree[idx_r].yTree, result)) {
+            break;
+        }
+
         if (xTree[idx_r].key <= xr) {
             long tmp = 0;
 
