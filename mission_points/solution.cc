@@ -24,8 +24,9 @@ struct NodeX {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void make_y_bst(const vector<pair<int, int>> &in, vector<NodeY> &out,
-                int l, int r, int i) {
+// precondition: `in` is already sorted on second (y) dimension
+void make_y_tree(const vector<pair<int, int>> &in, vector<NodeY> &out,
+                 int l, int r, int i) {
     if (r < l) {
         return;
     }
@@ -34,13 +35,14 @@ void make_y_bst(const vector<pair<int, int>> &in, vector<NodeY> &out,
     int k = in[m].second;
 
     out[i].key = k;
-    make_y_bst(in, out, l, m - 1, 2*i + 1);
-    make_y_bst(in, out, m + 1, r, 2*i + 2);
+    make_y_tree(in, out, l, m - 1, 2 * i + 1);
+    make_y_tree(in, out, m + 1, r, 2 * i + 2);
 }
 
 
-void make_x_bst(const vector<pair<int,int>>& in, vector<NodeX> &out,
-                int l, int r, int i) {
+// precondition: `in` is already sorted on second (y) dimension
+void make_2d_range_tree(const vector<pair<int, int>> &in, vector<NodeX> &out,
+                        int l, int r, int i) {
     if (r < l) {
         return;
     }
@@ -64,11 +66,11 @@ void make_x_bst(const vector<pair<int,int>>& in, vector<NodeX> &out,
 
     if (i > 0) {
         out[i].yTree.resize(in.size()*2);
-        make_y_bst(in, out[i].yTree, 0, in.size() - 1, 0);
+        make_y_tree(in, out[i].yTree, 0, in.size() - 1, 0);
     }
 
-    make_x_bst(points_l, out, l, m-1, 2*i + 1);
-    make_x_bst(points_r, out, m+1, r, 2*i + 2);
+    make_2d_range_tree(points_l, out, l, m - 1, 2 * i + 1);
+    make_2d_range_tree(points_r, out, m + 1, r, 2 * i + 2);
 }
 
 
@@ -99,34 +101,45 @@ bool contains_better_max(const vector<NodeY>& yTree, long best_so_far) {
     }
 }
 
-long get_max_y(const vector<NodeY>& yTree, int l, int r, long best_so_far) {
-    long result = 0;
+inline int left_child(int idx) {
+    return idx*2+1;
+}
+
+inline int right_child(int idx) {
+    return idx*2+2;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+long get_max_y_tree(const vector<NodeY> &yTree, int l, int r, long best_so_far) {
+    long max_val = 0;
 
     int idx = 0;
     while (is_not_null(yTree, idx)) {
         if (yTree[idx].key < l) {
-            idx = idx*2+2;
+            idx = right_child(idx);
         } else if (yTree[idx].key > r) {
-            idx = idx*2+1;
+            idx = left_child(idx);
         } else {
             break;
         }
     }
 
-
     if (!is_not_null(yTree, idx)) {
-        return result;
+        return max_val;
     }
 
     if (yTree[idx].max == -1 || yTree[idx].max <= best_so_far) {
-        return result;
+        return max_val;
     }
 
-    result = yTree[idx].value;
+    max_val = yTree[idx].value;
 
-    int idx_l = idx*2+1;
+    int idx_l = left_child(idx);
     while (is_not_null(yTree, idx_l)) {
-        if (yTree[idx_l].max == -1 || yTree[idx].max <= best_so_far) {
+        // if the subtree doesn't contain any values yet or the max value of the sub-tree is
+        // less than the max value found so far then skip it
+        if (yTree[idx_l].max == -1 || yTree[idx_l].max <= best_so_far) {
             break;
         }
 
@@ -134,26 +147,28 @@ long get_max_y(const vector<NodeY>& yTree, int l, int r, long best_so_far) {
             long tmp = yTree[idx_l].value;
 
             if (right_child_is_not_null(yTree, idx_l)) {
-                tmp = max(tmp, yTree[idx_l*2+2].max);
+                tmp = max(tmp, yTree[right_child(idx_l)].max);
             }
 
-            if (tmp > result) {
-                result = tmp;
+            if (tmp > max_val) {
+                max_val = tmp;
             }
         }
 
         if (yTree[idx_l].key < l) {
-            idx_l = idx_l*2+2;
+            idx_l = right_child(idx_l);
         } else if (yTree[idx_l].key > l) {
-            idx_l = idx_l*2+1;
+            idx_l = left_child(idx_l);
         } else {
             break;
         }
     }
 
-    int idx_r = idx*2+2;
+    int idx_r = right_child(idx);
     while (is_not_null(yTree, idx_r)) {
-        if (yTree[idx_r].max == -1 || yTree[idx].max <= best_so_far) {
+        // if the subtree doesn't contain any values yet or the max value of the sub-tree is
+        // less than the max value found so far then skip it
+        if (yTree[idx_r].max == -1 || yTree[idx_r].max <= best_so_far) {
             break;
         }
 
@@ -161,51 +176,51 @@ long get_max_y(const vector<NodeY>& yTree, int l, int r, long best_so_far) {
             long tmp = yTree[idx_r].value;
 
             if (left_child_is_not_null(yTree, idx_r)) {
-                tmp = max(tmp, yTree[idx_r*2+1].max);
+                tmp = max(tmp, yTree[left_child(idx_r)].max);
             }
 
-            if (tmp > result) {
-                result = tmp;
+            if (tmp > max_val) {
+                max_val = tmp;
             }
         }
 
         if (yTree[idx_r].key < r) {
-            idx_r = idx_r*2+2;
+            idx_r = right_child(idx_r);
         } else if (yTree[idx_r].key > r) {
-            idx_r = idx_r*2+1;
+            idx_r = left_child(idx_r);
         } else {
             break;
         }
     }
 
-    return result;
+    return max_val;
 }
 
 long get_max(const vector<NodeX>& xTree, int xl, int xr, int yl, int yr) {
-    long result = 0;
+    long max_val = 0;
 
     int idx = 0;
     while (is_not_null(xTree, idx)) {
         if (xTree[idx].key < xl) {
-            idx = idx*2+2;
+            idx = right_child(idx);
         } else if (xTree[idx].key > xr) {
-            idx = idx*2+1;
+            idx = left_child(idx);
         } else {
             break;
         }
     }
 
     if (!is_not_null(xTree, idx)) {
-        return result;
+        return max_val;
     }
 
     if (yl <= xTree[idx].y && xTree[idx].y <= yr) {
-        result = xTree[idx].value;
+        max_val = xTree[idx].value;
     }
 
-    int idx_l = idx*2+1;
+    int idx_l = left_child(idx);
     while (is_not_null(xTree, idx_l)) {
-        if (!contains_better_max(xTree[idx_l].yTree, result)) {
+        if (!contains_better_max(xTree[idx_l].yTree, max_val)) {
             break;
         }
 
@@ -213,31 +228,32 @@ long get_max(const vector<NodeX>& xTree, int xl, int xr, int yl, int yr) {
             long tmp = 0;
 
             if (right_child_is_not_null(xTree, idx_l)) {
-                tmp = get_max_y(xTree[idx_l*2+2].yTree, yl, yr, result);
+                tmp = get_max_y_tree(xTree[right_child(idx_l)].yTree, yl, yr,
+                                     max_val);
             }
 
             if (yl <= xTree[idx_l].y && xTree[idx_l].y <= yr && xTree[idx_l].value > tmp) {
                 tmp = xTree[idx_l].value;
             }
 
-            if (tmp > result) {
-                result = tmp;
+            if (tmp > max_val) {
+                max_val = tmp;
             }
         }
 
         if (xTree[idx_l].key < xl) {
-            idx_l = idx_l*2+2;
+            idx_l = right_child(idx_l);
         } else if (xTree[idx_l].key > xl) {
-            idx_l = idx_l*2+1;
+            idx_l = left_child(idx_l);
         } else {
             break;
         }
     }
 
 
-    int idx_r = idx*2+2;
+    int idx_r = right_child(idx);
     while (is_not_null(xTree, idx_r)) {
-        if (!contains_better_max(xTree[idx_r].yTree, result)) {
+        if (!contains_better_max(xTree[idx_r].yTree, max_val)) {
             break;
         }
 
@@ -245,39 +261,40 @@ long get_max(const vector<NodeX>& xTree, int xl, int xr, int yl, int yr) {
             long tmp = 0;
 
             if (left_child_is_not_null(xTree, idx_r)) {
-                tmp = get_max_y(xTree[idx_r*2+1].yTree, yl, yr, result);
+                tmp = get_max_y_tree(xTree[left_child(idx_r)].yTree, yl, yr,
+                                     max_val);
             }
 
             if (yl <= xTree[idx_r].y && xTree[idx_r].y <= yr && xTree[idx_r].value > tmp) {
                 tmp = xTree[idx_r].value;
             }
 
-            if (tmp > result) {
-                result = tmp;
+            if (tmp > max_val) {
+                max_val = tmp;
             }
         }
 
         if (xTree[idx_r].key < xr) {
-            idx_r = idx_r*2+2;
+            idx_r = right_child(idx_r);
         } else if (xTree[idx_r].key > xr) {
-            idx_r = idx_r*2+1;
+            idx_r = left_child(idx_r);
         } else {
             break;
         }
     }
 
-    return result;
+    return max_val;
 }
 
-void updateY(vector<NodeY>& yTree, int y, long value) {
+void update_y_tree(vector<NodeY> &yTree, int y, long value) {
     int idx = 0;
     while (is_not_null(yTree, idx)) {
         yTree[idx].max = max(yTree[idx].max, value);
 
         if (y < yTree[idx].key) {
-            idx = idx*2+1;
+            idx = left_child(idx);
         } else if (y >  yTree[idx].key) {
-            idx = idx*2+2;
+            idx = right_child(idx);
         } else {
             yTree[idx].value = value;
             return;
@@ -285,17 +302,18 @@ void updateY(vector<NodeY>& yTree, int y, long value) {
     }
 }
 
-void updateX(vector<NodeX>& xTree, int x, int y, long value) {
+void update(vector<NodeX> &xTree, int x, int y, long value) {
     int idx = 0;
     while (is_not_null(xTree, idx)) {
+        // no need to update the yTree at the root
         if (idx > 0) {
-            updateY(xTree[idx].yTree, y, value);
+            update_y_tree(xTree[idx].yTree, y, value);
         }
 
         if (x < xTree[idx].key) {
-            idx = idx*2+1;
+            idx = left_child(idx);
         } else if (x > xTree[idx].key) {
-            idx = idx*2+2;
+            idx = right_child(idx);
         } else {
             xTree[idx].y = y;
             xTree[idx].value = value;
@@ -330,9 +348,9 @@ void solve(int n, int d_lat, int d_long, vector<City>& cities) {
     });
 
     vector<NodeX> range_tree(points.size()*2);
-    make_x_bst(points, range_tree, 0, points.size()-1, 0);
+    make_2d_range_tree(points, range_tree, 0, points.size() - 1, 0);
 
-    long result = 0;
+    long ans = 0;
 
     for (auto &c : cities) {
         int x1 = max(0, c.latitude - d_lat);
@@ -340,23 +358,23 @@ void solve(int n, int d_lat, int d_long, vector<City>& cities) {
         int x2 = c.latitude + d_lat;
         int y2 = c.longitude + d_long;
 
-        if (result+c.point < 0) {
+        if (ans+c.point < 0) {
             continue;
         }
 
         long max_points = max(0L, get_max(range_tree, x1, x2, y1, y2));
         max_points += c.point;
 
-        if (max_points > result) {
-            result = max_points;
+        if (max_points > ans) {
+            ans = max_points;
         }
 
         if (max_points > 0) {
-            updateX(range_tree, c.latitude, c.longitude, max_points);
+            update(range_tree, c.latitude, c.longitude, max_points);
         }
     }
 
-    cout << result << endl;
+    cout << ans << endl;
 }
 
 int main(int argc, char **argv) {
