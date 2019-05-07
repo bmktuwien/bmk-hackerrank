@@ -45,3 +45,7 @@ add_executable(computer_game computer_game/solution.cc)
 ################################################################################
 
 add_executable(mission_points mission_points/solution.cc)
+
+################################################################################
+
+add_executable(king_richard_knights king_richard_knights/solution.cc)
