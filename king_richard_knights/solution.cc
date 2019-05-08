@@ -84,7 +84,31 @@ void query(int k, int n, const vector<Rect>& rect_list) {
 
 
     Rect r = rect_list[min({it_xl->idx, it_xr->idx, it_yl->idx, it_yr->idx})];
-    //cout << "Rect found: " << "k=" << k << " x=" << r.x << " y=" << r.y << " w=" << r.w << " rot=" << r.idx << endl;
+    cout << "Rect found: " << "k=" << k << " x=" << r.x << " y=" << r.y << " w=" << r.w << " rot=" << r.idx << endl;
+
+    int rot = r.idx % 4;
+
+    int dx = x - r.x;
+    int dy = y - r.y;
+
+    int new_x;
+    int new_y;
+
+    if (rot == 0) {
+        new_x = x;
+        new_y = y;
+    } else if (rot == 1) {
+        new_x = r.x + (r.w-dy);
+        new_y = r.y + dx;
+    } else if (rot == 2) {
+        new_x = r.x + (r.w-dx);
+        new_y = r.y + (r.w-dy);
+    } else {
+        new_x = r.x + dy;
+        new_y = r.y + (r.w-dx);
+    }
+
+    cout << new_y+1 << " " << new_x+1 << endl;
 }
 
 int main(int argc, char** argv) {
