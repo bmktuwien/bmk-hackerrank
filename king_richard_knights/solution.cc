@@ -12,8 +12,42 @@ struct Rect {
     int idx;
 };
 
+void rotate_90(vector<vector<int>> &a, int p, int q, int d) {
+
+    for (int i = 0; i < d / 2; i++) {
+        for (int j = i; j < d - i - 1; j++) {
+
+            // Swap elements of each cycle
+            // in clockwise direction
+            int temp = a[p+i][q+j];
+            a[p+i][q+j] = a[p + d - 1 - j][q + i];
+            a[p + d - 1 - j][q + i] = a[p + d - 1 - i][q + d - 1 - j];
+            a[p + d - 1 - i][q + d - 1 - j] = a[p + j][q + d - 1 - i];
+            a[p + j][q + d - 1 - i] = temp;
+        }
+    }
+}
+
+void print_matrix(vector<vector<int>> &a) {
+    for (int i = 0; i < a.size(); i++) {
+        for (int j = 0; j < a.size(); j++)
+            cout << std::setw(5) << a[i][j] << " ";
+        cout << endl;
+    }
+}
+
 vector<Rect> build_rect_list(int n) {
     vector<Rect> rect_list;
+
+    vector<vector<int>> naive_matrix;
+    for (int i = 0; i < n; i++) {
+        vector<int> v;
+        for (int j = 0; j < n; j++) {
+            v.push_back(i*n+j);
+        }
+        naive_matrix.push_back(v);
+    }
+
 
     int s;
     cin >> s;
@@ -33,6 +67,8 @@ vector<Rect> build_rect_list(int n) {
         int a, b, d;
         cin >> a >> b >> d;
         a--; b--;
+
+        rotate_90(naive_matrix, a, b, d+1);
 
         if (d == 0) {
             continue;
@@ -78,6 +114,7 @@ vector<Rect> build_rect_list(int n) {
         old_b = b;
     }
 
+    print_matrix(naive_matrix);
     return rect_list;
 }
 
