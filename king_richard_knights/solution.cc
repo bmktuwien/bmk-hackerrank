@@ -6,9 +6,10 @@ struct Rect {
     int x;
     int y;
     int w;
-    int idx;
+    int rot;
     int a;
     int b;
+    int idx;
 };
 
 vector<Rect> build_rect_list(int n) {
@@ -20,15 +21,15 @@ vector<Rect> build_rect_list(int n) {
     int x = 0;
     int y = 0;
     int w = n;
-    int idx = 0;
 
     int old_a = 0;
     int old_b = 0;
 
-    rect_list.push_back({x, y, w, idx, 0, 0});
-    idx++;
+    rect_list.push_back({x, y, w, 0, 0, 0, 0});
 
-    while (s--) {
+    int cnt = 1;
+
+    for (int rot = 1; rot <= s; rot++) {
         int a, b, d;
         cin >> a >> b >> d;
         a--; b--;
@@ -37,20 +38,44 @@ vector<Rect> build_rect_list(int n) {
             continue;
         }
 
-        if (idx == 1) {
+        if (rot == 1) {
             x = b;
             y = a;
         } else {
-            x += a - old_a;
-            y += w - b + old_b - d;
+            if (old_a == a && old_b == b) {
+                cnt++;
+                rect_list.back().rot = rot;
+                continue;
+            } else {
+                cnt = cnt % 4;
+
+                if (cnt > 0) {
+                    int a1 = a;
+                    int b1 = b;
+
+                    for (int j = 0; j < cnt-1; j++) {
+                        int db = b1 - old_b;
+                        int da = a1 - old_a;
+
+                        b1 = old_b + da;
+                        a1 = old_a + w - db - d;
+                    }
+
+                    x += a1 - old_a;
+                    y += w - b1 + old_b - d;
+                } else {
+                    x += b - old_b;
+                    y += a - old_a;
+                }
+            }
         }
 
         w = d;
-        rect_list.push_back({x, y, w, idx, a, b});
+        rect_list.push_back({x, y, w, rot, a, b, (int)rect_list.size()});
 
+        cnt = 1;
         old_a = a;
         old_b = b;
-        idx++;
     }
 
     return rect_list;
@@ -86,9 +111,9 @@ void query(int k, int n, const vector<Rect>& rect_list) {
 
 
     Rect r = rect_list[min({it_xl->idx, it_xr->idx, it_yl->idx, it_yr->idx})];
-    cout << "Rect found: " << "k=" << k << " x=" << r.x << " y=" << r.y << " w=" << r.w << " rot=" << r.idx << endl;
+    //cout << "Rect found: " << "k=" << k << " x=" << r.x << " y=" << r.y << " w=" << r.w << " rot=" << r.rot << endl;
 
-    int rot = r.idx % 4;
+    int rot = r.rot % 4;
     int dx = x - r.x;
     int dy = y - r.y;
 
@@ -96,8 +121,8 @@ void query(int k, int n, const vector<Rect>& rect_list) {
     int new_y;
 
     if (rot == 0) {
-        new_x = x;
-        new_y = y;
+        new_x = r.b + dx;
+        new_y = r.a + dy;
     } else if (rot == 1) {
         new_x = r.b + (r.w-dy);
         new_y = r.a + dx;
@@ -115,6 +140,8 @@ void query(int k, int n, const vector<Rect>& rect_list) {
 int main(int argc, char** argv) {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
+
+    //std::ifstream is("tests/input0.txt");
 
     int n;
     cin >> n;
