@@ -7,6 +7,8 @@ struct Rect {
     int y;
     int w;
     int idx;
+    int a;
+    int b;
 };
 
 vector<Rect> build_rect_list(int n) {
@@ -23,7 +25,7 @@ vector<Rect> build_rect_list(int n) {
     int old_a = 0;
     int old_b = 0;
 
-    rect_list.push_back({x, y, w, idx});
+    rect_list.push_back({x, y, w, idx, 0, 0});
     idx++;
 
     while (s--) {
@@ -44,7 +46,7 @@ vector<Rect> build_rect_list(int n) {
         }
 
         w = d;
-        rect_list.push_back({x, y, w, idx});
+        rect_list.push_back({x, y, w, idx, a, b});
 
         old_a = a;
         old_b = b;
@@ -87,7 +89,6 @@ void query(int k, int n, const vector<Rect>& rect_list) {
     cout << "Rect found: " << "k=" << k << " x=" << r.x << " y=" << r.y << " w=" << r.w << " rot=" << r.idx << endl;
 
     int rot = r.idx % 4;
-
     int dx = x - r.x;
     int dy = y - r.y;
 
@@ -98,14 +99,14 @@ void query(int k, int n, const vector<Rect>& rect_list) {
         new_x = x;
         new_y = y;
     } else if (rot == 1) {
-        new_x = r.x + (r.w-dy);
-        new_y = r.y + dx;
+        new_x = r.b + (r.w-dy);
+        new_y = r.a + dx;
     } else if (rot == 2) {
-        new_x = r.x + (r.w-dx);
-        new_y = r.y + (r.w-dy);
+        new_x = r.b + (r.w-dx);
+        new_y = r.a + (r.w-dy);
     } else {
-        new_x = r.x + dy;
-        new_y = r.y + (r.w-dx);
+        new_x = r.b + dy;
+        new_y = r.a + (r.w-dx);
     }
 
     cout << new_y+1 << " " << new_x+1 << endl;
