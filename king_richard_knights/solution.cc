@@ -2,28 +2,29 @@
 
 using namespace std;
 
-struct Entry {
+struct Rect {
     int x;
     int y;
     int w;
-    int rot;
+    int idx;
 };
 
-map<int, Entry> lkup_map;
+vector<Rect> build_rect_list(int n) {
+    vector<Rect> rect_list;
 
-void build_map(int n) {
     int s;
     cin >> s;
 
     int x = 0;
     int y = 0;
     int w = n;
-    int rot = 0;
+    int idx = 0;
 
     int old_a = 0;
     int old_b = 0;
 
-    lkup_map[0] = {0, 0, n, 0};
+    rect_list.push_back({x, y, w, idx});
+    idx++;
 
     while (s--) {
         int a, b, d;
@@ -34,7 +35,7 @@ void build_map(int n) {
             continue;
         }
 
-        if (rot == 0) {
+        if (idx == 1) {
             x = b;
             y = a;
         } else {
@@ -43,12 +44,47 @@ void build_map(int n) {
         }
 
         w = d;
-        lkup_map[x] = {x, y, w, rot};
+        rect_list.push_back({x, y, w, idx});
 
         old_a = a;
         old_b = b;
-        rot++;
+        idx++;
     }
+
+    return rect_list;
+}
+
+void query(int k, int n, const vector<Rect>& rect_list) {
+    int x = k % n;
+    int y = k / n;
+
+    auto it_xl = upper_bound(rect_list.begin(), rect_list.end(), x,
+                          [](int x_, const Rect& e) {
+                              return x_ < e.x;
+                          });
+    it_xl--;
+
+    auto it_xr = upper_bound(rect_list.begin(), rect_list.end(), x,
+                             [](int x_, const Rect& e) {
+                                 return (e.x+e.w) < x_;
+                             });
+    it_xr--;
+
+    auto it_yl = upper_bound(rect_list.begin(), rect_list.end(), y,
+                             [](int y_, const Rect& e) {
+                                 return y_ < e.y;
+                             });
+    it_yl--;
+
+    auto it_yr = upper_bound(rect_list.begin(), rect_list.end(), y,
+                             [](int y_, const Rect& e) {
+                                 return (e.y+e.w) < y_;
+                             });
+    it_yr--;
+
+
+    Rect r = rect_list[min({it_xl->idx, it_xr->idx, it_yl->idx, it_yr->idx})];
+    //cout << "Rect found: " << "k=" << k << " x=" << r.x << " y=" << r.y << " w=" << r.w << " rot=" << r.idx << endl;
 }
 
 int main(int argc, char** argv) {
@@ -58,6 +94,14 @@ int main(int argc, char** argv) {
     int n;
     cin >> n;
 
-    build_map(n);
-    cout << "done" << endl;
+    auto rect_list = build_rect_list(n);
+
+    int l;
+    cin >> l;
+    while (l--) {
+        int k;
+        cin >> k;
+
+        query(k, n, rect_list);
+    }
 }
