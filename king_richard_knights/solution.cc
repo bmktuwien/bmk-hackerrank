@@ -12,6 +12,14 @@ struct Rect {
     int idx;
 };
 
+struct Entry {
+    int a;
+    int b;
+    int d;
+};
+
+/////////////////////////////////////////////////////////////////////////////
+
 void rotate_90(vector<vector<int>> &a, int p, int q, int d) {
 
     for (int i = 0; i < d / 2; i++) {
@@ -36,21 +44,8 @@ void print_matrix(vector<vector<int>> &a) {
     }
 }
 
-vector<Rect> build_rect_list(int n) {
+vector<Rect> build_rect_list(int n, const vector<Entry>& in) {
     vector<Rect> rect_list;
-
-    vector<vector<int>> naive_matrix;
-    for (int i = 0; i < n; i++) {
-        vector<int> v;
-        for (int j = 0; j < n; j++) {
-            v.push_back(i*n+j);
-        }
-        naive_matrix.push_back(v);
-    }
-
-
-    int s;
-    cin >> s;
 
     int x = 0;
     int y = 0;
@@ -61,64 +56,58 @@ vector<Rect> build_rect_list(int n) {
 
     rect_list.push_back({x, y, w, 0, 0, 0, 0});
 
-    int cnt = 1;
+    int rot = 1;
 
-    for (int rot = 1; rot <= s; rot++) {
-        int a, b, d;
-        cin >> a >> b >> d;
-        a--; b--;
-
-        rotate_90(naive_matrix, a, b, d+1);
-
-        if (d == 0) {
+    for (auto &e : in) {
+        if (e.d == 0) {
             continue;
         }
 
         if (rot == 1) {
-            x = b;
-            y = a;
+            x = e.b;
+            y = e.a;
         } else {
-            if (old_a == a && old_b == b) {
-                cnt++;
+            if (old_a == e.a && old_b == e.b && w == e.d) {
                 rect_list.back().rot = rot;
+
+                rot++;
                 continue;
             } else {
-                cnt = cnt % 4;
+                int cnt = (rot-1) % 4;
 
                 if (cnt > 0) {
-                    int a1 = a;
-                    int b1 = b;
+                    int a1 = e.a;
+                    int b1 = e.b;
 
                     for (int j = 0; j < cnt-1; j++) {
                         int db = b1 - old_b;
                         int da = a1 - old_a;
 
                         b1 = old_b + da;
-                        a1 = old_a + w - db - d;
+                        a1 = old_a + w - db - e.d;
                     }
 
                     x += a1 - old_a;
-                    y += w - b1 + old_b - d;
+                    y += w - b1 + old_b - e.d;
                 } else {
-                    x += b - old_b;
-                    y += a - old_a;
+                    x += e.b - old_b;
+                    y += e.a - old_a;
                 }
             }
         }
 
-        w = d;
-        rect_list.push_back({x, y, w, rot, a, b, (int)rect_list.size()});
+        w = e.d;
 
-        cnt = 1;
-        old_a = a;
-        old_b = b;
+        old_a = e.a;
+        old_b = e.b;
+        rect_list.push_back({x, y, w, rot, e.a, e.b, (int)rect_list.size()});
+        rot++;
     }
 
-    print_matrix(naive_matrix);
     return rect_list;
 }
 
-void query(int k, int n, const vector<Rect>& rect_list) {
+pair<int,int> query(int k, int n, const vector<Rect>& rect_list) {
     int x = k % n;
     int y = k / n;
 
@@ -171,19 +160,70 @@ void query(int k, int n, const vector<Rect>& rect_list) {
         new_y = r.a + (r.w-dx);
     }
 
-    cout << new_y+1 << " " << new_x+1 << endl;
+    return {new_x, new_y};
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+void debug(int n) {
+    vector<Entry> in;
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < i; j++) {
+            in.push_back({i,i,n-1-i});
+        }
+    }
+
+    vector<vector<int>> naive_matrix;
+    for (int i = 0; i < n; i++) {
+        vector<int> v;
+        for (int j = 0; j < n; j++) {
+            v.push_back(i*n+j);
+        }
+        naive_matrix.push_back(v);
+    }
+
+    auto rect_list = build_rect_list(n, in);
+
+    for (auto &e : in) {
+        rotate_90(naive_matrix, e.a, e.b, e.d+1);
+    }
+
+    print_matrix(naive_matrix);
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            auto ans = query(naive_matrix[i][j], n, rect_list);
+
+            if (ans.first != j || ans.second != i) {
+                cout << "error: " << "elem=" << naive_matrix[i][j] << " x=" << j << " y=" << i << " ans.x=" << ans.first << " ans.y=" << ans.second << endl;
+            }
+        }
+    }
+
 }
 
 int main(int argc, char** argv) {
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
 
-    //std::ifstream is("tests/input0.txt");
-
     int n;
     cin >> n;
 
-    auto rect_list = build_rect_list(n);
+    //debug(n);
+    //return 0;
+
+    int s;
+    cin >> s;
+
+    vector<Entry> in;
+    for (int i = 0; i < s; i++) {
+        int a, b, d;
+        cin >> a >> b >> d;
+        a--; b--;
+
+        in.push_back({a, b, d});
+    }
+
+    auto rect_list = build_rect_list(n, in);
 
     int l;
     cin >> l;
@@ -191,6 +231,8 @@ int main(int argc, char** argv) {
         int k;
         cin >> k;
 
-        query(k, n, rect_list);
+        auto ans = query(k, n, rect_list);
+
+        cout << ans.second+1 << " " << ans.first+1 << endl;
     }
 }
