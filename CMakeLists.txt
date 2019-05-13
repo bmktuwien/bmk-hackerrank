@@ -49,3 +49,7 @@ add_executable(mission_points mission_points/solution.cc)
 ################################################################################
 
 add_executable(king_richard_knights king_richard_knights/solution.cc)
+
+################################################################################
+
+add_executable(task_scheduling task_scheduling/solution.cpp)
