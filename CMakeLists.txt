@@ -53,3 +53,7 @@ add_executable(king_richard_knights king_richard_knights/solution.cc)
 ################################################################################
 
 add_executable(task_scheduling task_scheduling/solution.cpp)
+
+################################################################################
+
+add_executable(cut_tree cut_tree/solution.cc)
