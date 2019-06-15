@@ -12,8 +12,8 @@ void solve(int n, int k, vector<vector<pair<int,int>>>& graph, vector<int>& sign
     auto cmp = [](Entry &left, Entry &right) { return left.distance > right.distance; };
 
     priority_queue<Entry, vector<Entry>, decltype(cmp)> queue(cmp);
-    vector<set<int>> processed(n);
-    vector<map<int, int>> dist_map(n);
+    vector<vector<bool>> processed(n, vector<bool>(1024, false));
+    vector<vector<int>> dist_map(n, vector<int>(1024, -1));
 
     vector<pair<int,int>> candidates;
 
@@ -23,13 +23,11 @@ void solve(int n, int k, vector<vector<pair<int,int>>>& graph, vector<int>& sign
         Entry e = queue.top();
         queue.pop();
 
-        auto it = processed[e.shop].find(e.sig);
-
-        if (it != processed[e.shop].end()) {
+        if (processed[e.shop][e.sig]) {
             continue;
         }
 
-        processed[e.shop].insert(e.sig);
+        processed[e.shop][e.sig] = true;
 
         if (e.shop == n-1) {
             candidates.push_back(make_pair(e.sig, e.distance));
@@ -38,13 +36,11 @@ void solve(int n, int k, vector<vector<pair<int,int>>>& graph, vector<int>& sign
         for (auto &p : graph[e.shop]) {
             auto sig = e.sig | signatures[p.first];
 
-            auto it2 = processed[p.first].find(sig);
-            if (it2 == processed[p.first].end()) {
+            if (!processed[p.first][sig]) {
                 // not processed yet
                 int d = INT_MAX;
 
-                auto it3 = dist_map[p.first].find(sig);
-                if (it3 != dist_map[p.first].end()) {
+                if (dist_map[p.first][sig] != -1) {
                     d = dist_map[p.first][sig];
                 }
 
@@ -57,6 +53,7 @@ void solve(int n, int k, vector<vector<pair<int,int>>>& graph, vector<int>& sign
             }
         }
     }
+
 
     int ans = INT_MAX;
 
