@@ -18,6 +18,16 @@ vector<bool> add_signatures(vector<bool>& s1, vector<bool>& s2) {
     return sig;
 }
 
+bool is_sub_signature(const vector<bool>& s1, const vector<bool>& s2) {
+    for (int i = 0; i < s1.size(); i++) {
+        if (!s1[i] && s2[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 
 void solve(int n, int k, vector<vector<pair<int,int>>>& graph, vector<vector<bool>>& signatures) {
     auto cmp = [](Entry &left, Entry &right) { return left.distance > right.distance; };
@@ -60,8 +70,22 @@ void solve(int n, int k, vector<vector<pair<int,int>>>& graph, vector<vector<boo
                 }
 
                 if (e.distance + p.second < d) {
-                    dist_map[p.first][sig] = e.distance + p.second;
-                    queue.push({sig, p.first, e.distance + p.second});
+                    int d_new = e.distance + p.second;
+                    bool useless = false;
+
+                    for (auto &p2 : dist_map[p.first]) {
+                        if (is_sub_signature(p2.first, sig) && p2.second < d_new) {
+                            useless = true;
+                            break;
+                        }
+                    }
+
+                    if (!useless) {
+                        dist_map[p.first][sig] = d_new;
+                        queue.push({sig, p.first, d_new});
+                    } else {
+                        cout << "uesless oida!!!" << endl;
+                    }
                 }
             }
         }
