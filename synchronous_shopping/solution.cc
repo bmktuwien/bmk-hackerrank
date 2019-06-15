@@ -51,7 +51,6 @@ void solve(int n, int k, vector<vector<pair<int,int>>>& graph, vector<int>& sign
                 if (e.distance + p.second < d) {
                     int d_new = e.distance + p.second;
 
-
                     dist_map[p.first][sig] = d_new;
                     queue.push({sig, p.first, d_new});
                 }
