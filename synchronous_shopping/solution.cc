@@ -19,7 +19,7 @@ vector<bool> add_signatures(vector<bool>& s1, vector<bool>& s2) {
 }
 
 
-void solve(int n, int k, vector<vector<int>>& graph, vector<vector<bool>>& signatures) {
+void solve(int n, int k, vector<vector<pair<int,int>>>& graph, vector<vector<bool>>& signatures) {
     auto cmp = [](Entry &left, Entry &right) { return left.distance > right.distance; };
 
     priority_queue<Entry, vector<Entry>, decltype(cmp)> queue(cmp);
@@ -47,13 +47,9 @@ void solve(int n, int k, vector<vector<int>>& graph, vector<vector<bool>>& signa
             candidates.push_back(make_pair(e.sig, e.distance));
         }
 
-        for (int shop = 0; shop < n; shop++) {
-            if (graph[e.shop][shop] == 0) {
-                continue;
-            }
-
-            auto sig = add_signatures(e.sig, signatures[shop]);
-            auto key2 = make_pair(shop, sig);
+        for (auto &p : graph[e.shop]) {
+            auto sig = add_signatures(e.sig, signatures[p.first]);
+            auto key2 = make_pair(p.first, sig);
 
             auto it2 = processed.find(key2);
             if (it2 == processed.end()) {
@@ -65,9 +61,9 @@ void solve(int n, int k, vector<vector<int>>& graph, vector<vector<bool>>& signa
                     d = dist_map[key2];
                 }
 
-                if (e.distance+graph[e.shop][shop] < d) {
-                    dist_map[key2] = e.distance+graph[e.shop][shop];
-                    queue.push({sig, shop, e.distance+graph[e.shop][shop]});
+                if (e.distance + p.second < d) {
+                    dist_map[key2] = e.distance + p.second;
+                    queue.push({sig, p.first, e.distance + p.second});
                 }
             }
         }
@@ -120,13 +116,13 @@ int main(int argc, char **argv) {
         signatures.push_back(sig);
     }
 
-    vector<vector<int>> graph(n, vector<int>(n, 0));
+    vector<vector<pair<int,int>>> graph(n, vector<pair<int,int>>());
 
     for (int i = 0; i < m; i++) {
         int a, b, w;
         cin >> a >> b >> w;
-        graph[a-1][b-1] = w;
-        graph[b-1][a-1] = w;
+        graph[a-1].push_back(make_pair(b-1,w));
+        graph[b-1].push_back(make_pair(a-1,w));
     }
 
     solve(n, k, graph, signatures);
