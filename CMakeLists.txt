@@ -57,3 +57,7 @@ add_executable(task_scheduling task_scheduling/solution.cpp)
 ################################################################################
 
 add_executable(cut_tree cut_tree/solution.cc)
+
+################################################################################
+
+add_executable(synchronous_shopping synchronous_shopping/solution.cc)
