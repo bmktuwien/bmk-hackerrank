@@ -23,8 +23,8 @@ void solve(int n, int k, vector<vector<pair<int,int>>>& graph, vector<vector<boo
     auto cmp = [](Entry &left, Entry &right) { return left.distance > right.distance; };
 
     priority_queue<Entry, vector<Entry>, decltype(cmp)> queue(cmp);
-    set<pair<int,vector<bool>>> processed;
-    map<pair<int,vector<bool>>, int> dist_map;
+    vector<set<vector<bool>>> processed(n);
+    vector<map<vector<bool>, int>> dist_map(n);
 
     vector<pair<vector<bool>,int>> candidates;
 
@@ -34,14 +34,13 @@ void solve(int n, int k, vector<vector<pair<int,int>>>& graph, vector<vector<boo
         Entry e = queue.top();
         queue.pop();
 
-        auto key = make_pair(e.shop, e.sig);
-        auto it = processed.find(key);
+        auto it = processed[e.shop].find(e.sig);
 
-        if (it != processed.end()) {
+        if (it != processed[e.shop].end()) {
             continue;
         }
 
-        processed.insert(key);
+        processed[e.shop].insert(e.sig);
 
         if (e.shop == n-1) {
             candidates.push_back(make_pair(e.sig, e.distance));
@@ -49,20 +48,19 @@ void solve(int n, int k, vector<vector<pair<int,int>>>& graph, vector<vector<boo
 
         for (auto &p : graph[e.shop]) {
             auto sig = add_signatures(e.sig, signatures[p.first]);
-            auto key2 = make_pair(p.first, sig);
 
-            auto it2 = processed.find(key2);
-            if (it2 == processed.end()) {
+            auto it2 = processed[p.first].find(sig);
+            if (it2 == processed[p.first].end()) {
                 // not processed yet
                 int d = INT_MAX;
 
-                auto it3 = dist_map.find(key2);
-                if (it3 != dist_map.end()) {
-                    d = dist_map[key2];
+                auto it3 = dist_map[p.first].find(sig);
+                if (it3 != dist_map[p.first].end()) {
+                    d = dist_map[p.first][sig];
                 }
 
                 if (e.distance + p.second < d) {
-                    dist_map[key2] = e.distance + p.second;
+                    dist_map[p.first][sig] = e.distance + p.second;
                     queue.push({sig, p.first, e.distance + p.second});
                 }
             }
