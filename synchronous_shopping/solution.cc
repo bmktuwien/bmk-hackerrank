@@ -3,40 +3,19 @@
 using namespace std;
 
 struct Entry {
-    vector<bool> sig;
+    int sig;
     int shop;
     int distance;
 };
 
-vector<bool> add_signatures(vector<bool>& s1, vector<bool>& s2) {
-    vector<bool> sig(s1.size(), false);
-
-    for (int i = 0; i < s1.size(); i++) {
-        sig[i] = s1[i] || s2[i];
-    }
-
-    return sig;
-}
-
-bool is_sub_signature(const vector<bool>& s1, const vector<bool>& s2) {
-    for (int i = 0; i < s1.size(); i++) {
-        if (!s1[i] && s2[i]) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-
-void solve(int n, int k, vector<vector<pair<int,int>>>& graph, vector<vector<bool>>& signatures) {
+void solve(int n, int k, vector<vector<pair<int,int>>>& graph, vector<int>& signatures) {
     auto cmp = [](Entry &left, Entry &right) { return left.distance > right.distance; };
 
     priority_queue<Entry, vector<Entry>, decltype(cmp)> queue(cmp);
-    vector<set<vector<bool>>> processed(n);
-    vector<map<vector<bool>, int>> dist_map(n);
+    vector<set<int>> processed(n);
+    vector<map<int, int>> dist_map(n);
 
-    vector<pair<vector<bool>,int>> candidates;
+    vector<pair<int,int>> candidates;
 
     queue.push({signatures[0], 0, 0});
 
@@ -57,7 +36,7 @@ void solve(int n, int k, vector<vector<pair<int,int>>>& graph, vector<vector<boo
         }
 
         for (auto &p : graph[e.shop]) {
-            auto sig = add_signatures(e.sig, signatures[p.first]);
+            auto sig = e.sig | signatures[p.first];
 
             auto it2 = processed[p.first].find(sig);
             if (it2 == processed[p.first].end()) {
@@ -71,21 +50,10 @@ void solve(int n, int k, vector<vector<pair<int,int>>>& graph, vector<vector<boo
 
                 if (e.distance + p.second < d) {
                     int d_new = e.distance + p.second;
-                    bool useless = false;
 
-                    for (auto &p2 : dist_map[p.first]) {
-                        if (is_sub_signature(p2.first, sig) && p2.second < d_new) {
-                            useless = true;
-                            break;
-                        }
-                    }
 
-                    if (!useless) {
-                        dist_map[p.first][sig] = d_new;
-                        queue.push({sig, p.first, d_new});
-                    } else {
-                        cout << "uesless oida!!!" << endl;
-                    }
+                    dist_map[p.first][sig] = d_new;
+                    queue.push({sig, p.first, d_new});
                 }
             }
         }
@@ -95,18 +63,9 @@ void solve(int n, int k, vector<vector<pair<int,int>>>& graph, vector<vector<boo
 
     for (int i = 0; i < candidates.size(); i++) {
         for (int j = i; j < candidates.size(); j++) {
-            auto sig = add_signatures(candidates[i].first, candidates[j].first);
+            auto sig = candidates[i].first | candidates[j].first;
 
-            bool all_fish = true;
-
-            for (auto b : sig) {
-                if (!b) {
-                    all_fish = false;
-                    break;
-                }
-            }
-
-            if (all_fish) {
+            if (sig == (1 << k) - 1) {
                 int t = max(candidates[i].second, candidates[j].second);
                 if (t < ans) {
                     ans = t;
@@ -122,17 +81,17 @@ int main(int argc, char **argv) {
     int n, m, k;
     cin >> n >> m >> k;
 
-    vector<vector<bool>> signatures;
+    vector<int> signatures;
 
     for (int i = 0; i < n; i++) {
         int f;
         cin >> f;
 
-        vector<bool> sig(k, false);
+        int sig = 0;
         for (int j = 0; j < f; j++) {
             int ft;
             cin >> ft;
-            sig[ft-1] = true;
+            sig |= (1 << (ft-1));
         }
 
         signatures.push_back(sig);
