@@ -26,13 +26,26 @@ void solve(int n, int k, vector<vector<int>>& graph, vector<vector<bool>>& signa
     set<pair<int,vector<bool>>> processed;
     map<pair<int,vector<bool>>, int> dist_map;
 
+    vector<pair<vector<bool>,int>> candidates;
+
     queue.push({signatures[0], 0, 0});
 
     while (!queue.empty()) {
         Entry e = queue.top();
         queue.pop();
 
-        processed.insert(make_pair(e.shop, e.sig));
+        auto key = make_pair(e.shop, e.sig);
+        auto it = processed.find(key);
+
+        if (it != processed.end()) {
+            continue;
+        }
+
+        processed.insert(key);
+
+        if (e.shop == n-1) {
+            candidates.push_back(make_pair(e.sig, e.distance));
+        }
 
         for (int shop = 0; shop < n; shop++) {
             if (graph[e.shop][shop] == 0) {
@@ -40,26 +53,51 @@ void solve(int n, int k, vector<vector<int>>& graph, vector<vector<bool>>& signa
             }
 
             auto sig = add_signatures(e.sig, signatures[shop]);
-            auto key = make_pair(shop, sig);
+            auto key2 = make_pair(shop, sig);
 
-            auto it = processed.find(key);
-            if (it == processed.end()) {
+            auto it2 = processed.find(key2);
+            if (it2 == processed.end()) {
                 // not processed yet
                 int d = INT_MAX;
 
-                auto it2 = dist_map.find(key);
-                if (it2 != dist_map.end()) {
-                    d = dist_map[key];
+                auto it3 = dist_map.find(key2);
+                if (it3 != dist_map.end()) {
+                    d = dist_map[key2];
                 }
 
                 if (e.distance+graph[e.shop][shop] < d) {
-                    dist_map[key] = e.distance+graph[e.shop][shop];
+                    dist_map[key2] = e.distance+graph[e.shop][shop];
                     queue.push({sig, shop, e.distance+graph[e.shop][shop]});
                 }
             }
         }
     }
 
+    int ans = INT_MAX;
+
+    for (int i = 0; i < candidates.size(); i++) {
+        for (int j = i; j < candidates.size(); j++) {
+            auto sig = add_signatures(candidates[i].first, candidates[j].first);
+
+            bool all_fish = true;
+
+            for (auto b : sig) {
+                if (!b) {
+                    all_fish = false;
+                    break;
+                }
+            }
+
+            if (all_fish) {
+                int t = max(candidates[i].second, candidates[j].second);
+                if (t < ans) {
+                    ans = t;
+                }
+            }
+        }
+    }
+
+    cout << ans << endl;
 }
 
 int main(int argc, char **argv) {
