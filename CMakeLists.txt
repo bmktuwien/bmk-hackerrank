@@ -61,3 +61,7 @@ add_executable(cut_tree cut_tree/solution.cc)
 ################################################################################
 
 add_executable(synchronous_shopping synchronous_shopping/solution.cc)
+
+################################################################################
+
+add_executable(minimum_penalty minimum_penalty/solution.cc)
