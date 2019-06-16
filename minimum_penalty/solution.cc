@@ -8,46 +8,41 @@ struct Entry {
 };
 
 void solve(int n, vector<vector<pair<int,int>>>& graph, int a, int b) {
-    auto cmp = [](Entry &left, Entry &right) { return left.penalty > right.penalty; };
+    queue<Entry> q;
+    vector<vector<bool>> marked(n, vector<bool>(1024, false));
 
-    priority_queue<Entry, vector<Entry>, decltype(cmp)> queue(cmp);
-    vector<bool> processed(n, false);
-    vector<int> penalty(n, -1);
+    q.push({a, 0});
 
-    queue.push({a, 0});
+    int ans = -1;
 
-    while (!queue.empty()) {
-        Entry e = queue.top();
-        queue.pop();
+    while (!q.empty()) {
+        Entry e = q.front();
+        q.pop();
 
         if (e.node == b) {
-            break;
+            if (ans == -1) {
+                ans = e.penalty;
+            } else {
+                if (e.penalty < ans) {
+                    ans = e.penalty;
+                }
+            }
         }
-
-        processed[e.node] = true;
 
         for (auto &p : graph[e.node]) {
             int node = p.first;
             int w = p.second;
 
-            if (!processed[node]) {
-                int pen = INT_MAX;
+            int p_new = e.penalty | w;
 
-                if (penalty[node] != -1) {
-                    pen = penalty[node];
-                }
-
-                if (e.penalty | w < pen) {
-                    int p_new = e.penalty | w;
-
-                    penalty[node] = p_new;
-                    queue.push({node, p_new});
-                }
+            if (!marked[node][p_new]) {
+                marked[node][p_new] = true;
+                q.push({node, p_new});
             }
         }
     }
 
-    cout << penalty[b] << endl;
+    cout << ans << endl;
 }
 
 int main(int argc, char **argv) {
