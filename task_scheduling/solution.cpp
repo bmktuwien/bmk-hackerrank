@@ -1,6 +1,4 @@
-#include <vector>
-#include <iostream>
-#include <algorithm>
+#include <bits/stdc++.h>
 
 using namespace std;
 
@@ -8,9 +6,39 @@ struct Task {
     int id;
     int m;
     int d;
-    int x;
+    int prio;
 };
 
+int solve(vector<Task>& tasks, int x) {
+    auto cmp = [](Task &left, Task &right) { return left.prio < right.prio; };
+
+    priority_queue<Task, vector<Task>, decltype(cmp)> queue(cmp);
+    for (int i = 0; i < x; i++) {
+        queue.push(tasks[i]);
+    }
+
+    int ans = 0;
+    int time = 1;
+
+    while (!queue.empty()) {
+        Task t = queue.top();
+        queue.pop();
+
+        if (time - t.d > ans) {
+            ans = time - t.d;
+        }
+
+        t.m--;
+        if (t.m > 0) {
+            t.prio--;
+            queue.push(t);
+        }
+
+        time++;
+    }
+
+    return ans;
+}
 
 int main(int argc, char** argv) {
     int n;
@@ -23,36 +51,8 @@ int main(int argc, char** argv) {
         tasks.push_back({i, m, d, -d+m});
     }
 
-    bool all_finished = false;
-
-    int time = 1;
-    while (!all_finished) {
-        all_finished = true;
-
-        Task *max_task = nullptr;
-
-        for (auto &t : tasks) {
-            if (t.m <= 0) {
-                continue;
-            } else {
-                all_finished = false;
-
-                if (max_task == nullptr || t.x > max_task->x) {
-                    max_task = &t;
-                }
-            }
-        }
-
-        if (max_task != nullptr) {
-            max_task->m--;
-            max_task->x--;
-
-            if (max_task->m == 0) {
-                cout << "Task " << max_task->id << " finished with overtime: " << time - max_task->d << endl;
-            }
-        }
-
-        time++;
+    for (int x = 1; x <= n; x++) {
+        cout << solve(tasks, x) << endl;
     }
 }
 
