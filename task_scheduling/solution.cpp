@@ -40,6 +40,30 @@ int solve(vector<Task>& tasks, int x) {
     return ans;
 }
 
+void solve2(vector<Task>& tasks) {
+    for (int i = 0; i < tasks.size(); i++) {
+        vector<Task> tasks_copy(tasks.begin(), tasks.begin()+i+1);
+
+        std::sort(tasks_copy.begin(), tasks_copy.end(), [](Task &left, Task &right) {
+            return left.d < right.d;
+        });
+
+        int ans = 0;
+        int acc = 0;
+
+        for (int j = 0; j <= i; j++) {
+            acc += tasks_copy[j].m;
+            if (tasks_copy[j].d  < acc) {
+                if (ans < acc - tasks_copy[j].d) {
+                    ans = acc - tasks_copy[j].d;
+                }
+            }
+        }
+
+        cout << ans << endl;
+    }
+}
+
 int main(int argc, char** argv) {
     int n;
     cin >> n;
@@ -51,8 +75,9 @@ int main(int argc, char** argv) {
         tasks.push_back({i, m, d, -d+m});
     }
 
-    for (int x = 1; x <= n; x++) {
+    /*for (int x = 1; x <= n; x++) {
         cout << solve(tasks, x) << endl;
-    }
+    }*/
+    solve2(tasks);
 }
 
