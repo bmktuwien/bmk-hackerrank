@@ -6,6 +6,7 @@ struct Node {
     int key;
     int max_overtime;
     int lazy_propagation;
+    int propagated;
     Node* left;
     Node* right;
 };
@@ -24,8 +25,9 @@ Node* buildBST(int start, int end) {
     int mid = (start + end)/2;
     auto *root = new Node();
     root->key = mid;
-    root->max_overtime = 0;
+    root->max_overtime = numeric_limits<int>::min();
     root->lazy_propagation = 0;
+    root->propagated = 0;
 
 
     root->left = buildBST(start, mid - 1);
@@ -43,22 +45,31 @@ int updateBST(Node *node, Task& task, int rank, int lazy_propagation) {
 
     if (rank == node->key) {
         lazy_propagation += node->lazy_propagation;
-
-        new_max = (lazy_propagation + task.m) - task.d;
         node->lazy_propagation += task.m;
+
+        int m1 = lazy_propagation + task.m - task.d;
+        int m2 = numeric_limits<int>::min();
+
+        if (node->right != nullptr) {
+            m2 = node->right->max_overtime + lazy_propagation + task.m - node->right->propagated;
+        }
+
+        new_max = max(m1, m2);
     } else if (rank > node->key) {
         new_max = updateBST(node->right, task, rank, lazy_propagation + node->lazy_propagation);
     } else {
-        node->lazy_propagation += task.m;
+        int m1 = updateBST(node->left, task, rank, lazy_propagation);
 
-        int m1 = node->max_overtime + lazy_propagation;
-        int m2 = updateBST(node->left, task, rank, lazy_propagation);
+        lazy_propagation += node->lazy_propagation;
+        node->lazy_propagation += task.m;
+        int m2 = node->max_overtime + lazy_propagation + task.m - node->propagated;
 
         new_max = max(m1, m2);
     }
 
     if (node->max_overtime < new_max) {
         node->max_overtime = new_max;
+        node->propagated = lazy_propagation;
     }
 
     return node->max_overtime;
