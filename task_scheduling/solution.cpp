@@ -51,7 +51,8 @@ int updateBST(Node *node, Task& task, int rank, int lazy_propagation) {
         int m2 = numeric_limits<int>::min();
 
         if (node->right != nullptr) {
-            m2 = node->right->max_overtime + lazy_propagation + task.m - node->right->propagated;
+            m2 = node->right->max_overtime + lazy_propagation + task.m +
+                 node->right->lazy_propagation - node->right->propagated;
         }
 
         new_max = max(m1, m2);
@@ -62,14 +63,20 @@ int updateBST(Node *node, Task& task, int rank, int lazy_propagation) {
 
         lazy_propagation += node->lazy_propagation;
         node->lazy_propagation += task.m;
-        int m2 = node->max_overtime + lazy_propagation + task.m - node->propagated;
+
+        int m2 = numeric_limits<int>::min();
+
+        if (node->right != nullptr) {
+            m2 = node->right->max_overtime + lazy_propagation + task.m +
+                 node->right->lazy_propagation - node->right->propagated;
+        }
 
         new_max = max(m1, m2);
     }
 
     if (node->max_overtime < new_max) {
         node->max_overtime = new_max;
-        node->propagated = lazy_propagation;
+        node->propagated = lazy_propagation + task.m;
     }
 
     return node->max_overtime;
