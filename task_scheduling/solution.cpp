@@ -82,33 +82,6 @@ long updateBST(Node *node, Task& task, int rank, int lazy_propagation) {
     return node->max;
 }
 
-vector<int> solve(vector<Task>& tasks) {
-    vector<int> res;
-
-    for (int i = 0; i < tasks.size(); i++) {
-        vector<Task> tasks_copy(tasks.begin(), tasks.begin()+i+1);
-
-        std::sort(tasks_copy.begin(), tasks_copy.end(), [](Task &left, Task &right) {
-            return left.d < right.d;
-        });
-
-        int ans = 0;
-        int acc = 0;
-
-        for (int j = 0; j <= i; j++) {
-            acc += tasks_copy[j].m;
-            if (tasks_copy[j].d  < acc) {
-                if (ans < acc - tasks_copy[j].d) {
-                    ans = acc - tasks_copy[j].d;
-                }
-            }
-        }
-
-        res.push_back(max(0, ans));
-    }
-
-    return res;
-}
 
 vector<int> solve2(vector<Task>& tasks) {
     vector<int> res;
@@ -144,43 +117,6 @@ int main(int argc, char** argv) {
         cin >> d >> m;
         tasks.push_back({i, m, d});
     }
-
-    /*std::random_device rd;     // only used once to initialise (seed) engine
-    std::mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in this case)
-    std::uniform_int_distribution<int> uni1(1, 30);
-    std::uniform_int_distribution<int> uni2(1, 30);
-
-    while (true) {
-        vector<Task> tasks;
-        for (int i = 0; i < 12; i++) {
-            Task t;
-            t.id = i;
-            t.d = uni1(rng);
-            t.m = uni2(rng);
-            tasks.push_back(t);
-        }
-
-        auto res = solve(tasks);
-        auto res1 = solve2(tasks);
-
-        if (res != res1) {
-            cout << "fuck" << endl;
-            break;
-        }
-    }*/
-
-    /*auto res = solve(tasks);
-    auto res1 = solve2(tasks);
-
-    for (auto i : res) {
-        cout << i << endl;
-    }
-
-    cout << "=====================" << endl;
-
-    for (auto i : res1) {
-        cout << i << endl;
-    }*/
 
     auto res = solve2(tasks);
     for (auto i : res) {
