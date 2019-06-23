@@ -52,7 +52,7 @@ int updateBST(Node *node, Task& task, int rank, int lazy_propagation) {
 
         if (node->right != nullptr) {
             m2 = node->right->max_overtime + lazy_propagation + task.m +
-                 node->right->lazy_propagation - node->right->propagated;
+                 - node->right->propagated;
         }
 
         new_max = max(m1, m2);
@@ -67,16 +67,18 @@ int updateBST(Node *node, Task& task, int rank, int lazy_propagation) {
         int m2 = numeric_limits<int>::min();
 
         if (node->right != nullptr) {
-            m2 = node->right->max_overtime + lazy_propagation + task.m +
-                 node->right->lazy_propagation - node->right->propagated;
+            m2 = node->right->max_overtime + lazy_propagation + task.m
+                 - node->right->propagated;
         }
 
-        new_max = max(m1, m2);
+        int m3 = node->max_overtime + task.m;
+
+        new_max = max(max(m1, m2), m3);
     }
 
     if (node->max_overtime < new_max) {
         node->max_overtime = new_max;
-        node->propagated = lazy_propagation + task.m;
+        node->propagated = lazy_propagation;
     }
 
     return node->max_overtime;
@@ -102,7 +104,7 @@ void solve(vector<Task>& tasks) {
             }
         }
 
-        cout << ans << endl;
+        cout << max(0, ans) << endl;
     }
 }
 
@@ -122,7 +124,7 @@ void solve2(vector<Task>& tasks) {
 
     for (auto &task : tasks) {
         int ans = updateBST(bst, task, task_ranks[task.id], 0);
-        cout << ans << endl;
+        cout << max(0,ans) << endl;
     }
 }
 
@@ -140,6 +142,8 @@ int main(int argc, char** argv) {
     /*for (int x = 1; x <= n; x++) {
         cout << solve(tasks, x) << endl;
     }*/
+    solve(tasks);
+    cout << "============" << endl;
     solve2(tasks);
 }
 
