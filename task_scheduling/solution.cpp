@@ -4,9 +4,8 @@ using namespace std;
 
 struct Node {
     long key;
-    bool value_set;
-    long value;
     long max;
+    long max_right;
     long lazy_propagation;
     long propagated;
     Node* left;
@@ -28,7 +27,7 @@ Node* buildBST(int start, int end) {
     auto *root = new Node();
     root->key = mid;
     root->max = numeric_limits<int>::min();
-    root->value_set = false;
+    root->max_right = numeric_limits<int>::min();
     root->lazy_propagation = 0;
     root->propagated = 0;
 
@@ -44,46 +43,48 @@ long updateBST(Node *node, Task& task, int rank, int lazy_propagation) {
         return numeric_limits<int>::min();
     }
 
-    long new_max;
-
     if (rank > node->key) {
-        node->propagated = lazy_propagation + node->lazy_propagation;
-        new_max = updateBST(node->right, task, rank, lazy_propagation + node->lazy_propagation);
+        long m1 = updateBST(node->right, task, rank, lazy_propagation + node->lazy_propagation);
+        long m2 = node->max_right + lazy_propagation + node->lazy_propagation - node->propagated;
+
+        long max_right = max(m1, m2);
+
+        if (max_right > node->max_right) {
+            node->max_right = max_right;
+            node->propagated = lazy_propagation + node->lazy_propagation;
+        }
+
+        node->max = max(node->max, node->max_right);
     } else {
         long m1 = numeric_limits<int>::min();
-
         if (rank == node->key) {
-            node->value = task.d;
-            node->value_set = true;
-
             m1 = lazy_propagation + node->lazy_propagation + task.m - task.d;
-        } else {
-            if (node->value_set) {
-                m1 = lazy_propagation + node->lazy_propagation + task.m - node->value;
-            }
         }
 
-        long m2 = updateBST(node->left, task, rank, lazy_propagation);
+        long m2 = node->max_right + lazy_propagation + node->lazy_propagation + task.m
+                  - node->propagated;
 
-        long m3 = numeric_limits<int>::min();
-        if (node->right != nullptr) {
-            m3 = node->right->max + lazy_propagation + node->lazy_propagation
-                 + task.m + node->right->lazy_propagation - node->right->propagated;
+        long m3 = updateBST(node->left, task, rank, lazy_propagation);
+
+
+        long max_right = max(m1, m2);
+        if (max_right > node->max_right) {
+            node->max_right = max_right;
+            node->propagated = lazy_propagation + node->lazy_propagation + task.m;
         }
 
-        node->propagated = lazy_propagation + node->lazy_propagation + task.m;
         node->lazy_propagation += task.m;
-        new_max = max(max(m1, m2), m3);
+
+        node->max = max(max(m1, m2), m3);
     }
 
-    if (node->max < new_max) {
-        node->max = new_max;
-    }
 
     return node->max;
 }
 
-void solve(vector<Task>& tasks) {
+vector<int> solve(vector<Task>& tasks) {
+    vector<int> res;
+
     for (int i = 0; i < tasks.size(); i++) {
         vector<Task> tasks_copy(tasks.begin(), tasks.begin()+i+1);
 
@@ -103,11 +104,15 @@ void solve(vector<Task>& tasks) {
             }
         }
 
-        cout << max(0, ans) << endl;
+        res.push_back(max(0, ans));
     }
+
+    return res;
 }
 
-void solve2(vector<Task>& tasks) {
+vector<int> solve2(vector<Task>& tasks) {
+    vector<int> res;
+
     vector<Task> tasks_sorted(tasks.begin(), tasks.end());
 
     std::sort(tasks_sorted.begin(), tasks_sorted.end(), [](Task &left, Task &right) {
@@ -123,8 +128,10 @@ void solve2(vector<Task>& tasks) {
 
     for (auto &task : tasks) {
         int ans = updateBST(bst, task, task_ranks[task.id], 0);
-        cout << max(0,ans) << endl;
+        res.push_back(max(0, ans));
     }
+
+    return res;
 }
 
 int main(int argc, char** argv) {
@@ -138,8 +145,47 @@ int main(int argc, char** argv) {
         tasks.push_back({i, m, d});
     }
 
-    solve(tasks);
-    cout << "============" << endl;
-    solve2(tasks);
+    /*std::random_device rd;     // only used once to initialise (seed) engine
+    std::mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in this case)
+    std::uniform_int_distribution<int> uni1(1, 30);
+    std::uniform_int_distribution<int> uni2(1, 30);
+
+    while (true) {
+        vector<Task> tasks;
+        for (int i = 0; i < 12; i++) {
+            Task t;
+            t.id = i;
+            t.d = uni1(rng);
+            t.m = uni2(rng);
+            tasks.push_back(t);
+        }
+
+        auto res = solve(tasks);
+        auto res1 = solve2(tasks);
+
+        if (res != res1) {
+            cout << "fuck" << endl;
+            break;
+        }
+    }*/
+
+    /*auto res = solve(tasks);
+    auto res1 = solve2(tasks);
+
+    for (auto i : res) {
+        cout << i << endl;
+    }
+
+    cout << "=====================" << endl;
+
+    for (auto i : res1) {
+        cout << i << endl;
+    }*/
+
+    auto res = solve2(tasks);
+    for (auto i : res) {
+        cout << i << endl;
+    }
+
 }
 
