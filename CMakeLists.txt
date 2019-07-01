@@ -65,3 +65,7 @@ add_executable(synchronous_shopping synchronous_shopping/solution.cc)
 ################################################################################
 
 add_executable(minimum_penalty minimum_penalty/solution.cc)
+
+################################################################################
+
+add_executable(maximum_index_product maximum_index_product/solution.cc)
