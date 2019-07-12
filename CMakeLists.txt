@@ -69,3 +69,7 @@ add_executable(minimum_penalty minimum_penalty/solution.cc)
 ################################################################################
 
 add_executable(maximum_index_product maximum_index_product/solution.cc)
+
+################################################################################
+
+add_executable(abbreviation abbreviation/solution.cc)
