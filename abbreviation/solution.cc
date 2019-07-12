@@ -3,6 +3,10 @@
 using namespace std;
 
 bool go(vector<vector<int>>& dp, int i, int j, const string& a, const string& b) {
+    if (j < 0) {
+        return true;
+    }
+
     if (i < 0) {
         return false;
     }
@@ -13,7 +17,7 @@ bool go(vector<vector<int>>& dp, int i, int j, const string& a, const string& b)
 
     for (int k = i; k >= 0; k--) {
         if (toupper(a[k]) == b[j]) {
-            if (j == 0 || go(dp, k-1, j-1, a, b)) {
+            if (go(dp, k-1, j-1, a, b)) {
                 dp[i][j] = 1;
                 return true;
             }
