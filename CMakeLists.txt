@@ -73,3 +73,7 @@ add_executable(maximum_index_product maximum_index_product/solution.cc)
 ################################################################################
 
 add_executable(abbreviation abbreviation/solution.cc)
+
+################################################################################
+
+add_executable(sherlock_cost sherlock_cost/solution.cc)
