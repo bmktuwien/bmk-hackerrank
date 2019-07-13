@@ -2,27 +2,35 @@
 
 using namespace std;
 
+
 void solve(vector<int>& input) {
     vector<int> dp(input[0], 0);
 
     for (int i = 1; i < input.size(); i++) {
-        vector<int> dp2;
-
         int e = input[i];
 
-        for (int q = 1; q <= e; q++) {
-            int max = 0;
-
-            for (int r = 0; r < dp.size(); r++) {
-                if (abs(q-r-1)+dp[r] > max) {
-                    max = abs(q-r-1)+dp[r];
-                }
+        int acc1 = numeric_limits<int>::min();
+        for (int j = 0; j < dp.size(); j++) {
+            if (dp[j]-j > acc1) {
+                acc1 = dp[j]-j;
             }
-
-            dp2.push_back(max);
         }
 
-        dp = move(dp2);
+        int acc2 = numeric_limits<int>::min();;
+        for (int j = dp.size()-1; j >= 0; j--) {
+            if (dp[j]+j > acc2) {
+                acc2 = dp[j]+j;
+            }
+        }
+
+        vector<int> tmp;
+
+        for (int j = 0; j < e; j++) {
+            int m = max(acc1+j, acc2-j);
+            tmp.push_back(m);
+        }
+
+        dp = move(tmp);
     }
 
     cout << *max_element(dp.begin(), dp.end()) << endl;
