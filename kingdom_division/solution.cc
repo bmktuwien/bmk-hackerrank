@@ -2,42 +2,55 @@
 
 using namespace std;
 
-pair<long,long> solve(const vector<vector<int>>& adj_matrix, set<int>& visited, int city) {
+struct Result {
+    long b;
+    long r;
+    bool is_leaf;
+};
+
+Result solve(const vector<vector<int>>& adj_matrix, set<int>& visited, int city) {
     visited.insert(city);
 
     bool is_leaf = true;
 
-    vector<long> bs;
-    vector<long> rs;
+    vector<Result> rs;
 
     for (auto neighbor : adj_matrix[city]) {
         if (visited.find(neighbor) == visited.end()) {
             is_leaf = false;
-            auto p = solve(adj_matrix, visited, neighbor);
-            bs.push_back(p.first);
-            rs.push_back(p.second);
+            auto res = solve(adj_matrix, visited, neighbor);
+            rs.push_back(res);
         }
     }
 
     if (is_leaf) {
-        return make_pair(1, 1);
+        return {1, 1, true};
     } else {
-        long acc = 1;
-        for (int i = 0; i < bs.size(); i++) {
-            acc *= bs[i] + rs[i];
+        long acc_b = 1;
+        long acc_r = 1;
+
+        bool flag = false;
+        for (auto &res : rs) {
+            acc_b *= res.b + (res.is_leaf ? 0 : res.r);
+            acc_r *= res.r + (res.is_leaf ? 0 : res.b);
+
+            flag |= res.is_leaf;
         }
 
-        long b_acc = 1;
-        for (auto b : bs) {
-            b_acc *= b;
+        if (!flag) {
+            long d_b = 1;
+            long d_r = 1;
+
+            for (auto &res : rs) {
+                d_b *= res.r;
+                d_r *= res.b;
+            }
+
+            acc_b -= d_b;
+            acc_r -= d_r;
         }
 
-        long r_acc = 1;
-        for (auto r : rs) {
-            r_acc *= r;
-        }
-
-        return make_pair(acc-r_acc, acc-b_acc);
+        return {acc_b, acc_r, false};
     }
 }
 
@@ -56,7 +69,7 @@ int main(int argc, char **argv) {
     }
 
     set<int> visited;
-    auto p = solve(adj_matrix, visited, 0);
+    auto r = solve(adj_matrix, visited, 0);
 
-    cout << p.first + p.second << endl;
+    cout << r.b + r.r << endl;
 }
