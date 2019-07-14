@@ -77,3 +77,7 @@ add_executable(abbreviation abbreviation/solution.cc)
 ################################################################################
 
 add_executable(sherlock_cost sherlock_cost/solution.cc)
+
+################################################################################
+
+add_executable(kingdom_division kingdom_division/solution.cc)
