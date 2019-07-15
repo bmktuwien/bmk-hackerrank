@@ -2,9 +2,13 @@
 
 using namespace std;
 
+#define M 1000000007
+
 struct Result {
     long b;
     long r;
+    long d_b;
+    long d_r;
     bool is_leaf;
 };
 
@@ -24,33 +28,42 @@ Result solve(const vector<vector<int>>& adj_matrix, set<int>& visited, int city)
     }
 
     if (is_leaf) {
-        return {1, 1, true};
+        return {1, 1, 0, 0, true};
     } else {
         long acc_b = 1;
         long acc_r = 1;
 
         bool flag = false;
         for (auto &res : rs) {
-            acc_b *= res.b + (res.is_leaf ? 0 : res.r);
-            acc_r *= res.r + (res.is_leaf ? 0 : res.b);
+            acc_b *= res.b + (res.is_leaf ? 0 : res.r) + res.d_b;
+            acc_r *= res.r + (res.is_leaf ? 0 : res.b) + res.d_r;
+
+            //acc_b %= M;
+            //acc_r %= M;
 
             flag |= res.is_leaf;
         }
 
+        long d_b = 0;
+        long d_r = 0;
+
         if (!flag) {
-            long d_b = 1;
-            long d_r = 1;
+            d_b = 1;
+            d_r = 1;
 
             for (auto &res : rs) {
                 d_b *= res.r;
                 d_r *= res.b;
+
+                //d_b %= M;
+                //d_r %= M;
             }
 
             acc_b -= d_b;
             acc_r -= d_r;
         }
 
-        return {acc_b, acc_r, false};
+        return {acc_b, acc_r, d_b, d_r, false};
     }
 }
 
@@ -68,8 +81,8 @@ int main(int argc, char **argv) {
         adj_matrix[v-1].push_back(u-1);
     }
 
-    set<int> visited;
-    auto r = solve(adj_matrix, visited, 0);
 
-    cout << r.b + r.r << endl;
+    /*set<int> visited;
+    auto r = solve(adj_matrix, visited, 0);
+    cout << r.b + r.r << endl;*/
 }
