@@ -79,7 +79,11 @@ Result solve(const vector<vector<int>>& tree) {
         }
     }
 
-    cout << dp[0].b + dp[0].r << endl;
+    long p1 = dp[0].b < 0 ? M + dp[0].b : dp[0].b;
+    long p2 = dp[0].r < 0 ? M + dp[0].r : dp[0].r;
+
+    long ans = (p1 + p2) % M;
+    cout << ans << endl;
 }
 
 int main(int argc, char **argv) {
