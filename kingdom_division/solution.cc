@@ -72,6 +72,12 @@ Result solve(const vector<vector<int>>& tree) {
                     acc_r -= d_r;
                 }
 
+                acc_b %= M;
+                acc_r %= M;
+
+                acc_b = acc_b < 0 ? acc_b + M : acc_b;
+                acc_r = acc_r < 0 ? acc_r + M : acc_r;
+
                 dp[city] = {acc_b, acc_r, d_b, d_r, false};
             }
 
@@ -79,10 +85,7 @@ Result solve(const vector<vector<int>>& tree) {
         }
     }
 
-    long p1 = dp[0].b < 0 ? M + dp[0].b : dp[0].b;
-    long p2 = dp[0].r < 0 ? M + dp[0].r : dp[0].r;
-
-    long ans = (p1 + p2) % M;
+    long ans = (dp[0].b + dp[0].r) % M;
     cout << ans << endl;
 }
 
