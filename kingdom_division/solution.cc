@@ -5,66 +5,81 @@ using namespace std;
 #define M 1000000007
 
 struct Result {
-    long b;
-    long r;
-    long d_b;
-    long d_r;
-    bool is_leaf;
+    long b{-1};
+    long r{-1};
+    long d_b{-1};
+    long d_r{-1};
+    bool is_leaf{false};
 };
 
-Result solve(const vector<vector<int>>& adj_matrix, set<int>& visited, int city) {
-    visited.insert(city);
+Result solve(const vector<vector<int>>& tree) {
+    vector<bool> is_leaf(tree.size(), true);
 
-    bool is_leaf = true;
+    vector<Result> dp(tree.size());
 
-    vector<Result> rs;
+    vector<int> stack;
+    stack.push_back(0);
 
-    for (auto neighbor : adj_matrix[city]) {
-        if (visited.find(neighbor) == visited.end()) {
-            is_leaf = false;
-            auto res = solve(adj_matrix, visited, neighbor);
-            rs.push_back(res);
-        }
-    }
+    while (!stack.empty()) {
+        int city = stack.back();
 
-    if (is_leaf) {
-        return {1, 1, 0, 0, true};
-    } else {
-        long acc_b = 1;
-        long acc_r = 1;
+        bool done = true;
 
-        bool flag = false;
-        for (auto &res : rs) {
-            acc_b *= res.b + (res.is_leaf ? 0 : res.r) + res.d_b;
-            acc_r *= res.r + (res.is_leaf ? 0 : res.b) + res.d_r;
-
-            //acc_b %= M;
-            //acc_r %= M;
-
-            flag |= res.is_leaf;
+        for (auto child : tree[city]) {
+            if (dp[child].b == -1) {
+                stack.push_back(child);
+                done = false;
+            }
         }
 
-        long d_b = 0;
-        long d_r = 0;
+        if (done) {
+            if (tree[city].empty()) {
+                dp[city] = {1, 1, 0, 0, true};
+            } else {
+                long acc_b = 1;
+                long acc_r = 1;
 
-        if (!flag) {
-            d_b = 1;
-            d_r = 1;
+                bool flag = false;
+                for (auto child : tree[city]) {
+                    auto &res = dp[child];
+                    acc_b *= res.b + (res.is_leaf ? 0 : res.r) + res.d_b;
+                    acc_r *= res.r + (res.is_leaf ? 0 : res.b) + res.d_r;
 
-            for (auto &res : rs) {
-                d_b *= res.r;
-                d_r *= res.b;
+                    acc_b %= M;
+                    acc_r %= M;
 
-                //d_b %= M;
-                //d_r %= M;
+                    flag |= res.is_leaf;
+                }
+
+                long d_b = 0;
+                long d_r = 0;
+
+                if (!flag) {
+                    d_b = 1;
+                    d_r = 1;
+
+                    for (auto child : tree[city]) {
+                        auto &res = dp[child];
+
+                        d_b *= res.r;
+                        d_r *= res.b;
+
+                        d_b %= M;
+                        d_r %= M;
+                    }
+
+                    acc_b -= d_b;
+                    acc_r -= d_r;
+                }
+
+                dp[city] = {acc_b, acc_r, d_b, d_r, false};
             }
 
-            acc_b -= d_b;
-            acc_r -= d_r;
+            stack.pop_back();
         }
-
-        return {acc_b, acc_r, d_b, d_r, false};
     }
+
+    cout << dp[0].b + dp[0].r << endl;
 }
 
 int main(int argc, char **argv) {
@@ -81,8 +96,24 @@ int main(int argc, char **argv) {
         adj_matrix[v-1].push_back(u-1);
     }
 
+    vector<vector<int>> tree(adj_matrix.size());
+    set<int> marked;
+    vector<int> stack;
+    stack.push_back(0);
 
-    /*set<int> visited;
-    auto r = solve(adj_matrix, visited, 0);
-    cout << r.b + r.r << endl;*/
+    while (!stack.empty()) {
+        int city = stack.back();
+        stack.pop_back();
+
+        marked.insert(city);
+
+        for (auto c : adj_matrix[city]) {
+            if (marked.find(c) == marked.end()) {
+                tree[city].push_back(c);
+                stack.push_back(c);
+            }
+        }
+    }
+
+    solve(tree);
 }
