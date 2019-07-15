@@ -12,7 +12,7 @@ struct Result {
     bool is_leaf{false};
 };
 
-Result solve(const vector<vector<int>>& tree) {
+void solve(const vector<vector<int>>& tree) {
     vector<bool> is_leaf(tree.size(), true);
 
     vector<Result> dp(tree.size());
