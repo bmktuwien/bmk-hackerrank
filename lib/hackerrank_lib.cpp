@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <iostream>
+#include <cstring>
 
 namespace hackerrank_lib {
 
@@ -286,6 +287,29 @@ long n_choose_k(int n, int k) {
     }
 
     return res;
+}
+
+
+std::vector<int> gen_primes(int n) {
+    std::vector<int> result;
+
+    bool prime[n+1];
+    memset(prime, 1, sizeof(prime));
+
+    for (int p = 2; p * p <= n; p++) {
+        if (prime[p]) {
+            for (int i = p * 2; i <= n; i += p)
+                prime[i] = false;
+        }
+    }
+
+    for (int p = 2; p <= n; p++) {
+        if (prime[p]) {
+            result.push_back(p);
+        }
+    }
+
+    return result;
 }
 
 } // namespace hackerrank_lib

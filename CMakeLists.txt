@@ -81,3 +81,7 @@ add_executable(sherlock_cost sherlock_cost/solution.cc)
 ################################################################################
 
 add_executable(kingdom_division kingdom_division/solution.cc)
+
+################################################################################
+
+add_executable(prime_xor prime_xor/solution.cc)
