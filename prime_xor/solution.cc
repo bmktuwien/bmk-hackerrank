@@ -25,10 +25,8 @@ void solve(const vector<int>& freq_tbl, const vector<bool>& prime_tbl) {
 
     for (int a = 0; a <= N; a++) {
         for (int w = 0; w <= W; w++) {
-            if (w == 0) {
-                dp[a][w] = 1;
-            } else if (a == 0) {
-                dp[a][w] = 0;
+            if (a == 0) {
+                dp[a][w] = w == 0 ? 1 : 0;
             } else {
                 long v = 3500 + a - 1;
 
