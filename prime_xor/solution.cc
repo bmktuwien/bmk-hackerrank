@@ -2,10 +2,10 @@
 
 using namespace std;
 
+#define M 1000000007
 
 vector<bool> gen_prime_table(int n) {
     vector<bool> prime(n+1, true);
-
 
     for (int p = 2; p * p <= n; p++) {
         if (prime[p]) {
@@ -18,25 +18,26 @@ vector<bool> gen_prime_table(int n) {
 }
 
 void solve(const vector<int>& freq_tbl, const vector<bool>& prime_tbl) {
-    int N = 1000;
+    int N = 1001;
     int W = 8192;
 
     vector<vector<int>> dp(N+1, vector<int>(W+1));
 
     for (int a = 0; a <= N; a++) {
         for (int w = 0; w <= W; w++) {
-            if (a == 0) {
-                dp[a][w] = 0;
-            } else if (w == 0) {
+            if (w == 0) {
                 dp[a][w] = 1;
+            } else if (a == 0) {
+                dp[a][w] = 0;
             } else {
-                int v = 3500 + a - 1;
+                long v = 3500 + a - 1;
 
                 int freq = freq_tbl[v];
                 int c1 = freq / 2 + 1;
                 int c2 = freq / 2 + (freq % 2);
 
-                dp[a][w] = c1 * dp[a-1][w] + c2 * dp[a-1][w^v];
+                dp[a][w] = ((c1 * dp[a-1][w]) % M) + ((c2 * dp[a-1][w^v]) % M);
+                dp[a][w] %= M;
             }
         }
     }
@@ -45,6 +46,7 @@ void solve(const vector<int>& freq_tbl, const vector<bool>& prime_tbl) {
     for (int w = 2; w <= W; w++) {
         if (prime_tbl[w] && dp[N][w] > 0) {
             ans += dp[N][w];
+            ans %= M;
         }
     }
 
