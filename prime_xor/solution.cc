@@ -21,7 +21,7 @@ void solve(const vector<int>& freq_tbl, const vector<bool>& prime_tbl) {
     int N = 1001;
     int W = 8192;
 
-    vector<vector<int>> dp(N+1, vector<int>(W+1));
+    vector<vector<long>> dp(N+1, vector<long>(W+1));
 
     for (int a = 0; a <= N; a++) {
         for (int w = 0; w <= W; w++) {
@@ -31,8 +31,8 @@ void solve(const vector<int>& freq_tbl, const vector<bool>& prime_tbl) {
                 long v = 3500 + a - 1;
 
                 int freq = freq_tbl[v];
-                int c1 = freq / 2 + 1;
-                int c2 = freq / 2 + (freq % 2);
+                long c1 = freq / 2 + 1;
+                long c2 = freq / 2 + (freq % 2);
 
                 dp[a][w] = ((c1 * dp[a-1][w]) % M) + ((c2 * dp[a-1][w^v]) % M);
                 dp[a][w] %= M;
@@ -40,7 +40,7 @@ void solve(const vector<int>& freq_tbl, const vector<bool>& prime_tbl) {
         }
     }
 
-    int ans = 0;
+    long ans = 0;
     for (int w = 2; w <= W; w++) {
         if (prime_tbl[w] && dp[N][w] > 0) {
             ans += dp[N][w];
