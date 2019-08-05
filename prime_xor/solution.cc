@@ -18,10 +18,10 @@ vector<bool> gen_prime_table(int n) {
 }
 
 void solve(const vector<int>& freq_tbl, const vector<bool>& prime_tbl) {
-    int N = 4500;
+    int N = 1000;
     int W = 8192;
 
-    vector<vector<int>> dp(N+1, vector<int>(W+1, 0));
+    vector<vector<int>> dp(N+1, vector<int>(W+1));
 
     for (int a = 0; a <= N; a++) {
         for (int w = 0; w <= W; w++) {
@@ -30,11 +30,13 @@ void solve(const vector<int>& freq_tbl, const vector<bool>& prime_tbl) {
             } else if (w == 0) {
                 dp[a][w] = 1;
             } else {
-                int freq = freq_tbl[a];
+                int v = 3500 + a - 1;
+
+                int freq = freq_tbl[v];
                 int c1 = freq / 2 + 1;
                 int c2 = freq / 2 + (freq % 2);
 
-                dp[a][w] = c1 * dp[a-1][w] + c2 * dp[a-1][w^a];
+                dp[a][w] = c1 * dp[a-1][w] + c2 * dp[a-1][w^v];
             }
         }
     }
